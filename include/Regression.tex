@@ -1,66 +1,36 @@
-* Simple Linear Regression                                              :slr:
-:PROPERTIES:
-:tangle: R/11-slr.R
-:CUSTOM_ID: cha-simple-linear-regression
-:END:
+\chapter{Simple Linear Regression}
+\label{sec-11}
 
-#+BEGIN_SRC R :exports none :eval never
-#    IPSUR: Introduction to Probability and Statistics Using R
-#    Copyright (C) 2014  G. Jay Kerns
-#
-#    Chapter: Simple Linear Regression
-#
-#    This file is part of IPSUR.
-#
-#    IPSUR is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    IPSUR is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with IPSUR.  If not, see <http://www.gnu.org/licenses/>.
-#+END_SRC
+\textbf{What do I want them to know?}
 
-#+BEGIN_SRC R :exports none :eval no-export
-# This chapter's package dependencies
-library(ggplot2)
-library(HH)
-library(lmtest)
-#+END_SRC
+\begin{itemize}
+\item basic philosophy of SLR and the regression assumptions
+\item point and interval estimation of the model parameters, and how to
+use it to make predictions
+\item point and interval estimation of future observations from the model
+\item regression diagnostics, including \( R^{2} \) and basic residual
+analysis
+\item the concept of influential versus outlying observations, and how to
+tell the difference
+\end{itemize}
 
-*What do I want them to know?*
-
-- basic philosophy of SLR and the regression assumptions
-- point and interval estimation of the model parameters, and how to
-  use it to make predictions
-- point and interval estimation of future observations from the model
-- regression diagnostics, including \( R^{2} \) and basic residual
-  analysis
-- the concept of influential versus outlying observations, and how to
-  tell the difference
-
-** Basic Philosophy
-:PROPERTIES:
-:CUSTOM_ID: sec-Basic-Philosophy
-:END:
+\section{Basic Philosophy}
+\label{sec-11-1}
 
 Here we have two variables \(X\) and \(Y\). For our purposes, \(X\) is
 not random (so we will write \(x\)), but \(Y\) is random. We believe
-that \(Y\) depends in /some/ way on \(x\). Some typical examples of \(
+that \(Y\) depends in \emph{some} way on \(x\). Some typical examples of \(
 (x,Y) \) pairs are
 
-- \( x = \) study time and \( Y = \) score on a test.
-- \( x = \) height and \( Y = \) weight.
-- \( x = \) smoking frequency and \( Y = \) age of first heart attack.
+\begin{itemize}
+\item \( x = \) study time and \( Y = \) score on a test.
+\item \( x = \) height and \( Y = \) weight.
+\item \( x = \) smoking frequency and \( Y = \) age of first heart attack.
+\end{itemize}
 
 Given information about the relationship between \(x\) and \(Y\), we
-would like to /predict/ future values of \(Y\) for particular values
-of \(x\). This turns out to be a difficult problem[fn:fn-yogi], so
+would like to \emph{predict} future values of \(Y\) for particular values
+of \(x\). This turns out to be a difficult problem, so
 instead we first tackle an easier problem: we estimate \( \mathbb{E} Y
 \). How can we accomplish this? Well, we know that \(Y\) depends
 somehow on \(x\), so it stands to reason that
@@ -68,69 +38,11 @@ somehow on \(x\), so it stands to reason that
 \mathbb{E} Y = \mu(x),\ \mbox{a function of }x.
 \end{equation}
 
-[fn:fn-yogi] Yogi Berra once said, "It is always difficult to make
-predictions, especially about the future."
-
-But we should be able to say more than that. To focus our efforts we
-impose some structure on the functional form of \(\mu\). For instance,
-- if \(\mu(x)=\beta_{0}+\beta_{1}x\), we try to estimate \( \beta_{0}
-  \) and \( \beta_{1} \).
-- if \( \mu(x) = \beta_{0} + \beta_{1}x + \beta_{2}x^{2} \), we try to
-  estimate \(\beta_{0}\), \(\beta_{1}\), and \(\beta_{2}\).
-- if \( \mu(x) = \beta_{0} \mathrm{e}^{\beta_{1}x} \), we try to
-  estimate \(\beta_{0}\) and \(\beta_{1}\).
-
-This helps us in the sense that we concentrate on the estimation of
-just a few parameters, \(\beta_{0}\) and \(\beta_{1}\), say, rather
-than some nebulous function. Our /modus operandi/ is simply to perform
-the random experiment \(n\) times and observe the \(n\) ordered pairs
-of data \( (x_{1},Y_{1}),\ (x_{2},Y_{2}),\ \ldots,(x_{n},Y_{n}) \). We
-use these \(n\) data points to estimate the parameters.
-
-More to the point, there are /three simple linear regression/ (SLR)
-assumptions @@latex:\index{regression assumptions}@@ that will form
-the basis for the rest of this chapter:
-
-#+BEGIN_assumption
-We assume that \(\mu\) is a linear function of \(x\), that is, 
-\begin{equation}
-\mu(x)=\beta_{0}+\beta_{1}x,
-\end{equation}
-where \(\beta_{0}\) and \(\beta_{1}\) are unknown constants to be
-estimated.
-#+END_assumption
-
-#+BEGIN_assumption
-We further assume that \( Y_{i} \) is \( \mu(x_{i}) \), a "signal",
-plus some "error" (represented by the symbol \( \epsilon_{i} \)):
-\begin{equation}
-Y_{i} = \beta_{0} + \beta_{1}x_{i} + \epsilon_{i}, \quad i = 1,2,\ldots,n.
-\end{equation}
-#+END_assumption
-
-#+BEGIN_assumption
-We lastly assume that the errors are IID normal with mean 0 and
-variance \( \sigma^{2} \):
-\begin{equation}
-\epsilon_{1},\epsilon_{2},\ldots,\epsilon_{n}\sim\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=\sigma).
-\end{equation}
-#+END_assumption
-
-#+BEGIN_rem
-We assume both the normality of the errors \(\epsilon\) and the
-linearity of the mean function \( \mu \). Recall from Proposition
-[[pro-mvnorm-cond-dist]] of Chapter
-[[#cha-Multivariable-Distributions]] that if \( (X,Y) \sim
-\mathsf{mvnorm} \) then the mean of \(Y|x\) is a linear function of
-\(x\). This is not a coincidence. In more advanced classes we study
-the case that both \(X\) and \(Y\) are random, and in particular, when
-they are jointly normally distributed.
-#+END_rem
-
-*** What does it all mean?
-See Figure [[fig-philosophy]]. Shown in the figure is a solid line, the
-regression line @@latex:\index{regression line}@@ \(\mu\), which in
-this display has slope 0.5 and /y/-intercept 2.5, that is, \( \mu(x) =
+\subsection{What does it all mean?}
+\label{sec-11-1-1}
+See Figure \texttt{fig-philosophy}. Shown in the figure is a solid line, the
+regression line \index{regression line} \(\mu\), which in
+this display has slope 0.5 and \emph{y}-intercept 2.5, that is, \( \mu(x) =
 2.5 + 0.5x \). The intuition is that for each given value of \(x\), we
 observe a random value of \(Y\) which is normally distributed with a
 mean equal to the height of the regression line at that \(x\)
@@ -143,48 +55,18 @@ are independent, but we also assume that their distributions have the
 same spread. In mathematical terms this means that the normal
 densities all along the line have identical standard deviations --
 there is no "fanning out" or "scrunching in" of the normal densities
-as \(x\) increases[fn:fn-cvass].
+as \(x\) increases.
 
-[fn:fn-cvass] In practical terms, this constant variance assumption is
-often violated, in that we often observe scatterplots that fan out
-from the line as \(x\) gets large or small. We say under those
-circumstances that the data show /heteroscedasticity/. There are
-methods to address it, but they fall outside the realm of SLR.
-
-#+NAME: philosophy
-#+BEGIN_SRC R :exports results :results graphics :file fig/slr-philosophy.ps
-plot(c(0,5), c(0,6.5), type = "n", xlab="x", ylab="y")
-abline(h = 0, v = 0, col = "gray60")
-abline(a = 2.5, b = 0.5, lwd = 2)
-x <- 600:3000/600
-y <- dnorm(x, mean = 3, sd = 0.5)
-lines(y + 1.0, x)
-lines(y + 2.5, x + 0.75)
-lines(y + 4.0, x + 1.5)
-abline(v = c(1, 2.5, 4), lty = 2, col = "grey")
-segments(1, 3, 1 + dnorm(0,0,0.5),3, lty = 2, col = "gray")
-segments(2.5, 3.75, 2.5 + dnorm(0,0,0.5), 3.75, lty = 2, col = "gray")
-segments(4,4.5, 4 + dnorm(0,0,0.5),4.5, lty = 2, col = "gray")
-#+END_SRC
-
-#+NAME: fig-philosophy
-#+CAPTION[Philosophical foundations of SLR]: \small Philosophical foundations of SLR.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: philosophy
-[[file:fig/slr-philosophy.ps]]
-
-
-# +BEGIN_exampletoo
-<<exa-Speed-and-Stopping>> *Speed and stopping distance of cars.* We
-will use the data frame \texttt{cars} @@latex:\index{Data
-sets!cars@\texttt{cars}}@@ from the =datasets= package
-\cite{datasets}. It has two variables: =speed= and =dist=. We can take
+\label{exa-Speed-and-Stopping} \textbf{Speed and stopping distance of cars.} We
+will use the data frame \texttt{cars} \index{Data
+sets!cars@\texttt{cars}} from the \texttt{datasets} package
+\cite{datasets}. It has two variables: \texttt{speed} and \texttt{dist}. We can take
 a look at some of the values in the data frame:
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 head(cars)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :   speed dist
 : 1     4    2
 : 2     4   10
@@ -192,49 +74,44 @@ head(cars)
 : 4     7   22
 : 5     8   16
 : 6     9   10
+\end{verbatim}
 
-The =speed= represents how fast the car was going (\(x\)) in miles per
-hour and =dist= (\(Y\)) measures how far it took the car to stop, in
-feet. We can make a simple scatterplot of the data with the =qplot=
-command in the =ggplot2= package \cite{ggplot2}.
+The \texttt{speed} represents how fast the car was going (\(x\)) in miles per
+hour and \texttt{dist} (\(Y\)) measures how far it took the car to stop, in
+feet. We can make a simple scatterplot of the data with the \texttt{qplot}
+command in the \texttt{ggplot2} package \cite{ggplot2}.
 
-#+NAME: carscatter
-#+BEGIN_SRC R :exports both :results graphics :file fig/slr-carscatter.ps
+\begin{verbatim}
 plot(dist ~ speed, data = cars)
-#+END_SRC
+\end{verbatim}
 
-#+NAME: fig-carscatter
-#+CAPTION[Scatterplot of =dist= versus =speed= for the =cars= data]: \small A scatterplot of =dist= versus =speed= for the =cars= data.  There is clearly an upward trend to the plot which is approximately linear. 
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: carscatter
-[[file:fig/slr-carscatter.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-carscatter.ps}
+\caption[Scatterplot of \texttt{dist} versus \texttt{speed} for the \texttt{cars} data]{\label{fig-carscatter}\small A scatterplot of \texttt{dist} versus \texttt{speed} for the \texttt{cars} data.  There is clearly an upward trend to the plot which is approximately linear.}
+\end{figure}
 
-You can see the output in Figure [[fig-Scatter-cars]], which was produced by the
+You can see the output in Figure \texttt{fig-Scatter-cars}, which was produced by the
 following code.
 
-#+BEGIN_SRC R :exports code :eval never :results silent
+\begin{verbatim}
 qplot(speed, dist, data = cars)
-#+END_SRC
+\end{verbatim}
 
 There is a pronounced upward trend to the data points, and the pattern
 looks approximately linear. There does not appear to be substantial
 fanning out of the points or extreme values.
-# +END_exampletoo
 
-** Estimation
-:PROPERTIES:
-:CUSTOM_ID: sec-SLR-Estimation
-:END:
+\section{Estimation}
+\label{sec-11-2}
 
-*** Point Estimates of the Parameters
-:PROPERTIES:
-:CUSTOM_ID: sub-point-estimate-mle-slr
-:END:
+\subsection{Point Estimates of the Parameters}
+\label{sec-11-2-1}
 
 Where is \( \mu(x) \)? In essence, we would like to "fit" a line to
-the points. But how do we determine a "good" line? Is there a /best/
-line? We will use maximum likelihood @@latex:\index{maximum
-likelihood}@@ to find it. We know:
+the points. But how do we determine a "good" line? Is there a \emph{best}
+line? We will use maximum likelihood \index{maximum
+likelihood} to find it. We know:
 \begin{equation}
 Y_{i} = \beta_{0} + \beta_{1}x_{i} + \epsilon_{i},\quad i=1,\ldots,n,
 \end{equation}
@@ -243,7 +120,7 @@ where the \( \epsilon_{i} \) are IID
 Y_{i}\sim\mathsf{norm}(\mathtt{mean}=\beta_{0}+\beta_{1}x_{i},\,\mathtt{sd}=\sigma),\
 i=1,\ldots,n \). Furthermore, \( Y_{1},\ldots,Y_{n} \) are independent
 -- but not identically distributed. The likelihood
-function @@latex:\index{likelihood function}@@ is:
+function \index{likelihood function} is:
 \begin{alignat}{1}
 L(\beta_{0},\beta_{1},\sigma)= & \prod_{i=1}^{n}f_{Y_{i}}(y_{i}),\\
 = & \prod_{i=1}^{n}(2\pi\sigma^{2})^{-1/2}\exp\left\{ \frac{-(y_{i}-\beta_{0}-\beta_{1}x_{i})^{2}}{2\sigma^{2}}\right\} ,\\
@@ -255,7 +132,7 @@ We take the natural logarithm to get
 \ln L(\beta_{0},\beta_{1},\sigma)=-\frac{n}{2}\ln(2\pi\sigma^{2})-\frac{\sum_{i=1}^{n}(y_{i}-\beta_{0}-\beta_{1}x_{i})^{2}}{2\sigma^{2}}.
 \end{equation}
 We would like to maximize this function of \( \beta_{0} \) and \(
-\beta_{1} \). See Appendix [[#sec-Multivariable-Calculus]] which tells us that
+\beta_{1} \). See Appendix \ref{sec-21-6} which tells us that
 we should find critical points by means of the partial
 derivatives. Let us start by differentiating with respect to
 \(\beta_{0} \):
@@ -284,7 +161,7 @@ Solving the system of equations \eqref{eq-regML-a} and \eqref{eq-regML-b}
 n\beta_{0} + \beta_{1}\sum_{i = 1}^{n}x_{i} & = & \sum_{i = 1}^{n}y_{i}\\
 \beta_{0}\sum_{i = 1}^{n}x_{i}+\beta_{1}\sum_{i = 1}^{n}x_{i}^{2} & = & \sum_{i = 1}^{n}x_{i}y_{i}
 \end{eqnarray}
-for \( \beta_{0} \) and \( \beta_{1} \) (in Exercise [[xca-find-mles-SLR]]) gives
+for \( \beta_{0} \) and \( \beta_{1} \) (in Exercise \ref{xca-find-mles-SLR}) gives
 \begin{equation}
 \label{eq-regline-slope-formula}
 \hat{\beta}_{1} = \frac{\sum_{i = 1}^{n}x_{i}y_{i} - \left.\left(\sum_{i = 1}^{n}x_{i}\right)\left(\sum_{i = 1}^{n}y_{i}\right)\right] n}{\sum_{i = 1}^{n}x_{i}^{2} - \left.\left(\sum_{i = 1}^{n}x_{i}\right)^{2}\right/ n}
@@ -307,7 +184,7 @@ above. For notation we will usually write \( b_{0} = \hat{\beta_{0}}
 \) and \( b_{1}=\hat{\beta_{1}} \) so that \( \hat{\mu}(x) = b_{0} +
 b_{1}x \).
 
-#+BEGIN_rem
+\begin{rem}
 The formula for \( b_{1} \) in Equation \eqref{eq-regline-slope-formula} gets
 the job done but does not really make any sense. There are many
 equivalent formulas for \( b_{1} \) that are more intuitive, or at the
@@ -319,135 +196,131 @@ b_{1} = r\frac{s_{y}}{s_{x}},
 where \(r\), \( s_{y} \), and \( s_{x} \) are the sample correlation
 coefficient and the sample standard deviations of the \(Y\) and \(x\)
 data, respectively. See Exercise
-[[xca-show-alternate-slope-formula]]. Also, notice the similarity between
+\ref{xca-show-alternate-slope-formula}. Also, notice the similarity between
 Equation \eqref{eq-sample-correlation-formula} and Equation
 \eqref{eq-population-slope-slr}.
-#+END_rem
+\end{rem}
 
-**** How to do it with \(\mathsf{R}\)
-
-#+BEGIN_SRC R :exports none :results silent
-tmpcoef <- round(as.numeric(coef(lm(dist ~ speed, cars))), 2)
-#+END_SRC
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-2-1-1}
 
 Here we go. \(\mathsf{R}\) will calculate the linear regression line
-with the =lm= function. We will store the result in an object which we
-will call =cars.lm=. Here is how it works:
+with the \texttt{lm} function. We will store the result in an object which we
+will call \texttt{cars.lm}. Here is how it works:
 
-#+BEGIN_SRC R :exports code :results silent
+\begin{verbatim}
 cars.lm <- lm(dist ~ speed, data = cars)
-#+END_SRC
+\end{verbatim}
 
-The first part of the input to the =lm= function, =dist ~ speed=, is a
-/model formula/, read like this: =dist= is described (or modeled) by
-=speed=. The =data = cars= argument tells \(\mathsf{R}\) where to look
+The first part of the input to the \texttt{lm} function, \texttt{dist \textasciitilde{} speed}, is a
+\emph{model formula}, read like this: \texttt{dist} is described (or modeled) by
+\texttt{speed}. The \texttt{data = cars} argument tells \(\mathsf{R}\) where to look
 for the variables quoted in the model formula. The output object
-=cars.lm= contains a multitude of information. Let's first take a look
+\texttt{cars.lm} contains a multitude of information. Let's first take a look
 at the coefficients of the fitted regression line, which are extracted
-by the =coef= function (alternatively, we could just type =cars.lm= to
+by the \texttt{coef} function (alternatively, we could just type \texttt{cars.lm} to
 see the same thing):
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 coef(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : (Intercept)       speed 
 :  -17.579095    3.932409
+\end{verbatim}
 
 The parameter estimates \( b_{0} \) and \( b_{1} \) for the intercept
 and slope, respectively, are shown above. 
 
 It is good practice to visually inspect the data with the regression
 line added to the plot. To do this we first scatterplot the original
-data and then follow with a call to the =abline= function. The inputs
-to =abline= are the coefficients of =cars.lm=; see Figure
-[[fig-Scatter-cars-regline]].
+data and then follow with a call to the \texttt{abline} function. The inputs
+to \texttt{abline} are the coefficients of \texttt{cars.lm}; see Figure
+\texttt{fig-Scatter-cars-regline}.
 
-#+NAME: carline
-#+BEGIN_SRC R :exports both :results graphics :file fig/slr-carline.ps
+\begin{verbatim}
 ggplot(cars, aes(x = speed, y = dist)) + 
   geom_point(shape = 19) + 
   geom_smooth(method = lm, se = FALSE)
-#+END_SRC
+\end{verbatim}
 
-#+NAME: fig-carline
-#+CAPTION[Scatterplot with added regression line for the =cars= data]: \small A scatterplot with an added regression line for the =cars= data.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: carline
-[[file:fig/slr-carline.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-carline.ps}
+\caption[Scatterplot with added regression line for the \texttt{cars} data]{\label{fig-carline}\small A scatterplot with an added regression line for the \texttt{cars} data.}
+\end{figure}
 
 To calculate points on the regression line we may simply plug the
 desired \(x\) value(s) into \( \hat{\mu} \), either by hand, or with
-the =predict= function. The inputs to =predict= are the fitted linear
-model object, =cars.lm=, and the desired \(x\) value(s) represented by
+the \texttt{predict} function. The inputs to \texttt{predict} are the fitted linear
+model object, \texttt{cars.lm}, and the desired \(x\) value(s) represented by
 a data frame. See the example below.
 
-# +BEGIN_exampletoo
-<<exa-regline-cars-interpret>> Using the regression line for the
-=cars= data:
-1. What is the meaning of \( \mu(60) = \beta_{0} + \beta_{1}(8) \)?
-   This represents the average stopping distance (in feet) for a car
-   going 8 mph.
-2. Interpret the slope \(\beta_{1}\). The true slope \(\beta_{1}\)
-   represents the increase in average stopping distance for each mile
-   per hour faster that the car drives. In this case, we estimate the
-   car to take approximately SRC_R[:eval no-export]{tmpcoef[2]} 3.93 additional feet
-   to stop for each additional mph increase in speed.
-3. Interpret the intercept \( \beta_{0} \). This would represent the
-   mean stopping distance for a car traveling 0 mph (which our
-   regression line estimates to be \( SRC_R[:eval no-export]{tmpcoef[1]} -17.58. Of
-   course, this interpretation does not make any sense for this
-   example, because a car travelling 0 mph takes 0 ft to stop (it was
-   not moving in the first place)! What went wrong? Looking at the
-   data, we notice that the smallest speed for which we have measured
-   data is 4 mph. Therefore, if we predict what would happen for
-   slower speeds then we would be /extrapolating/, a dangerous
-   practice which often gives nonsensical results.
-# +END_exampletoo
+\label{exa-regline-cars-interpret} Using the regression line for the
+\texttt{cars} data:
+\begin{enumerate}
+\item What is the meaning of \( \mu(60) = \beta_{0} + \beta_{1}(8) \)?
+This represents the average stopping distance (in feet) for a car
+going 8 mph.
+\item Interpret the slope \(\beta_{1}\). The true slope \(\beta_{1}\)
+represents the increase in average stopping distance for each mile
+per hour faster that the car drives. In this case, we estimate the
+car to take approximately 3.93 additional feet
+to stop for each additional mph increase in speed.
+\item Interpret the intercept \( \beta_{0} \). This would represent the
+mean stopping distance for a car traveling 0 mph (which our
+regression line estimates to be $\backslash$( -17.58. Of
+course, this interpretation does not make any sense for this
+example, because a car travelling 0 mph takes 0 ft to stop (it was
+not moving in the first place)! What went wrong? Looking at the
+data, we notice that the smallest speed for which we have measured
+data is 4 mph. Therefore, if we predict what would happen for
+slower speeds then we would be \emph{extrapolating}, a dangerous
+practice which often gives nonsensical results.
+\end{enumerate}
 
-*** Point Estimates of the Regression Line
-:PROPERTIES:
-:CUSTOM_ID: sub-slr-point-est-regline
-:END:
+\subsection{Point Estimates of the Regression Line}
+\label{sec-11-2-2}
 
 We said at the beginning of the chapter that our goal was to estimate
 \( \mu = \mathbb{E} Y \), and the arguments in Section
-[[#sub-point-estimate-mle-slr]] showed how to obtain an estimate \(
+\ref{sec-11-2-1} showed how to obtain an estimate \(
 \hat{\mu} \) of \( \mu \) when the regression assumptions hold. Now we
 will reap the benefits of our work in more ways than we previously
 disclosed. Given a particular value \(x_{0}\), there are two values we
 would like to estimate:
-1. the mean value of \(Y\) at \(x_{0}\), and
-2. a future value of \(Y\) at \(x_{0}\). The first is a number,
-   \(\mu(x_{0})\), and the second is a random variable, \(Y(x_{0})\),
-   but our point estimate is the same for both: \(\hat{\mu}(x_{0})\).
+\begin{enumerate}
+\item the mean value of \(Y\) at \(x_{0}\), and
+\item a future value of \(Y\) at \(x_{0}\). The first is a number,
+\(\mu(x_{0})\), and the second is a random variable, \(Y(x_{0})\),
+but our point estimate is the same for both: \(\hat{\mu}(x_{0})\).
+\end{enumerate}
 
-# +BEGIN_exampletoo
-<<exa-regline-cars-pe-8mph>> We may use the regression line to obtain
+\label{exa-regline-cars-pe-8mph} We may use the regression line to obtain
 a point estimate of the mean stopping distance for a car traveling 8
 mph: \( \hat{\mu}(15) = b_{0} + (8) (b_{1})\) which is approximately
 13.88. We would also use 13.88 as a point estimate for the stopping
 distance of a future car traveling 8 mph.
-# +END_exampletoo
 
 
 Note that we actually have observed data for a car traveling 8 mph;
 its stopping distance was 16 ft as listed in the fifth row of the
-=cars= data (which we saw in Example [[exa-Speed-and-Stopping]]).
+\texttt{cars} data (which we saw in Example \ref{exa-Speed-and-Stopping}).
 
-#+BEGIN_SRC R :exports both :results output pp
+\begin{verbatim}
 cars[5, ]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :   speed dist
 : 5     8   16
+\end{verbatim}
 
 There is a special name for estimates \( \hat{\mu}(x_{0}) \) when \(
 x_{0} \) matches an observed value \(x_{i}\) from the data set. They
-are called /fitted values/, they are denoted by \(\hat{Y}_{1}\),
-\(\hat{Y}_{2}\), ..., \(\hat{Y}_{n}\) (ignoring repetition), and they
+are called \emph{fitted values}, they are denoted by \(\hat{Y}_{1}\),
+\(\hat{Y}_{2}\), \ldots{}, \(\hat{Y}_{n}\) (ignoring repetition), and they
 play an important role in the sections that follow.
 
 In an abuse of notation we will sometimes write \(\hat{Y}\) or
@@ -455,51 +328,55 @@ In an abuse of notation we will sometimes write \(\hat{Y}\) or
 \(x_{0}\) does not belong to the original data if the context of the
 statement obviates any danger of confusion.
 
-We saw in Example [[exa-regline-cars-interpret]] that spooky things can
+We saw in Example \ref{exa-regline-cars-interpret} that spooky things can
 happen when we are cavalier about point estimation. While it is
 usually acceptable to predict/estimate at values of \(x_{0}\) that
 fall within the range of the original \(x\) data, it is reckless to
 use \(\hat{\mu}\) for point estimates at locations outside that
-range. Such estimates are usually worthless. /Do not extrapolate/
+range. Such estimates are usually worthless. \emph{Do not extrapolate}
 unless there are compelling external reasons, and even then, temper it
 with a good deal of caution.
 
-**** How to do it with \(\mathsf{R}\)
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-2-2-1}
 
 The fitted values are automatically computed as a byproduct of the
 model fitting procedure and are already stored as a component of the
-=cars.lm= object. We may access them with the =fitted= function (we
+\texttt{cars.lm} object. We may access them with the \texttt{fitted} function (we
 only show the first five entries):
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 fitted(cars.lm)[1:5]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :         1         2         3         4         5 
 : -1.849460 -1.849460  9.947766  9.947766 13.880175
+\end{verbatim}
 
 Predictions at \(x\) values that are not necessarily part of the
-original data are done with the =predict= function. The first argument
-is the original =cars.lm= object and the second argument =newdata=
-accepts a dataframe (in the same form that was used to fit =cars.lm=)
+original data are done with the \texttt{predict} function. The first argument
+is the original \texttt{cars.lm} object and the second argument \texttt{newdata}
+accepts a dataframe (in the same form that was used to fit \texttt{cars.lm})
 that contains the locations at which we are seeking predictions. Let
 us predict the average stopping distances of cars traveling 6 mph, 8
 mph, and 21 mph:
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 predict(cars.lm, newdata = data.frame(speed = c(6, 8, 21)))
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :         1         2         3 
 :  6.015358 13.880175 65.001489
+\end{verbatim}
 
 Note that there were no observed cars that traveled 6 mph or 21
 mph. Also note that our estimate for a car traveling 8 mph matches the
-value we computed by hand in Example [[exa-regline-cars-pe-8mph]].
+value we computed by hand in Example \ref{exa-regline-cars-pe-8mph}.
 
-*** Mean Square Error and Standard Error
+\subsection{Mean Square Error and Standard Error}
+\label{sec-11-2-3}
 
 To find the MLE of \(\sigma^{2}\) we consider the partial derivative
 \begin{equation}
@@ -511,73 +388,64 @@ setting equal to zero we get
 \hat{\sigma^{2}}=\frac{1}{n}\sum_{i=1}^{n}(y_{i}-\hat{\beta}_{0}-\hat{\beta}_{1}x_{i})^{2}=\frac{1}{n}\sum_{i=1}^{n}[y_{i}-\hat{\mu}(x_{i})]^{2}.
 \end{equation}
 We write \(\hat{Yi}=\hat{\mu}(x_{i})\), and we let
-\(E_{i}=Y_{i}-\hat{Y_{i}}\) be the \(i^{\mathrm{th}}\) /residual/. We
+\(E_{i}=Y_{i}-\hat{Y_{i}}\) be the \(i^{\mathrm{th}}\) \emph{residual}. We
 see
 \begin{equation}
 n\hat{\sigma^{2}}=\sum_{i=1}^{n}E_{i}^{2}=SSE=\mbox{ the sum of squared errors.}
 \end{equation}
-For a point estimate of \(\sigma^{2}\) we use the /mean square error/
+For a point estimate of \(\sigma^{2}\) we use the \emph{mean square error}
 \(S^{2}\) defined by
 \begin{equation}
 S^{2}=\frac{SSE}{n-2},
 \end{equation}
-and we estimate \(\sigma\) with the /standard error/
-\(S=\sqrt{S^{2}}\)[fn:fn-se].
+and we estimate \(\sigma\) with the \emph{standard error}
+\(S=\sqrt{S^{2}}\).
 
-[fn:fn-se] Be careful not to confuse the mean square error \(S^{2}\)
-with the sample variance \(S^{2}\) in Chapter
-\ref{cha-Describing-Data-Distributions}. Other notation the reader may
-encounter is the lowercase \(s^{2}\) or the bulky \(MSE\).
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-2-3-1}
 
-**** How to do it with \(\mathsf{R}\)
-
-The residuals for the model may be obtained with the =residuals=
+The residuals for the model may be obtained with the \texttt{residuals}
 function; we only show the first few entries in the interest of space:
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 residuals(cars.lm)[1:5]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :         1         2         3         4         5 
 :  3.849460 11.849460 -5.947766 12.052234  2.119825
-
-#+BEGIN_SRC R :exports none :results silent
-tmpred <- round(as.numeric(predict(cars.lm, newdata = data.frame(speed = 8))), 2)
-tmps <- round(summary(cars.lm)$sigma, 2)
-#+END_SRC
+\end{verbatim}
 
 In the last section, we calculated the fitted value for \(x=8\) and
-found it to be approximately \( \hat{\mu}(8) \approx\) SRC_R[:eval no-export]{tmpred}
+found it to be approximately \( \hat{\mu}(8) \approx\) 
 13.88. Now, it turns out that there was only one recorded observation
 at \(x = 8\), and we have seen this value in the output of
-=head(cars)= in Example [[exa-Speed-and-Stopping]]; it was \(\mathtt{dist}
+\texttt{head(cars)} in Example \ref{exa-Speed-and-Stopping}; it was \(\mathtt{dist}
 = 16\) ft for a car with \( \mathtt{speed} = 8 \) mph. Therefore, the
 residual should be \(E = Y - \hat{Y}\) which is \(E \approx 16 - \)
-SRC_R[:eval no-export]{tmpred} 13.88. Now take a look at the last entry of
-=residuals(cars.lm)=, above. It is not a coincidence.
+13.88. Now take a look at the last entry of
+\texttt{residuals(cars.lm)}, above. It is not a coincidence.
 
-The estimate \(S\) for \(\sigma\) is called the =Residual standard
-error= and for the =cars= data is shown a few lines up on the
-=summary(cars.lm)= output (see How to do it with \(\mathsf{R}\) in
-Section [[#sub-slr-interval-est-params]]). We may read it from there to be \(
-S\approx\) SRC_R[:eval no-export]{tmps} 15.38, or we can access it directly from the
-=summary= object.
+The estimate \(S\) for \(\sigma\) is called the \texttt{Residual standard
+error} and for the \texttt{cars} data is shown a few lines up on the
+\texttt{summary(cars.lm)} output (see How to do it with \(\mathsf{R}\) in
+Section \ref{sec-11-2-4}). We may read it from there to be \(
+S\approx\) 15.38, or we can access it directly from the
+\texttt{summary} object.
 
-#+BEGIN_SRC R :exports both :results output pp
+\begin{verbatim}
 carsumry <- summary(cars.lm)
 carsumry$sigma
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : [1] 15.37959
+\end{verbatim}
 
-*** Interval Estimates of the Parameters
-:PROPERTIES:
-:CUSTOM_ID: sub-slr-interval-est-params
-:END:
+\subsection{Interval Estimates of the Parameters}
+\label{sec-11-2-4}
 
-We discussed general interval estimation in Chapter [[#cha-Estimation]]. There
+We discussed general interval estimation in Chapter \ref{sec-9}. There
 we found that we could use what we know about the sampling
 distribution of certain statistics to construct confidence intervals
 for the parameter being estimated. We will continue in that vein, and
@@ -585,7 +453,7 @@ to get started we will determine the sampling distributions of the
 parameter estimates, \(b_{1}\) and \(b_{0}\).
 
 To that end, we can see from Equation \eqref{eq-regline-slope-formula} (and it
-is made clear in Chapter [[#cha-multiple-linear-regression]]) that \(b_{1}\) is
+is made clear in Chapter \ref{sec-12}) that \(b_{1}\) is
 just a linear combination of normally distributed random variables, so
 \(b_{1}\) is normally distributed too. Further, it can be shown that
 \begin{equation}
@@ -595,7 +463,7 @@ where
 \begin{equation}
 \sigma_{b_{1}}=\frac{\sigma}{\sqrt{\sum_{i=1}^{n}(x_{i}-\overline{x})^{2}}}
 \end{equation}
-is called /the standard error of/ \(b_{1}\) which unfortunately
+is called \emph{the standard error of} \(b_{1}\) which unfortunately
 depends on the unknown value of \(\sigma\). We do not lose heart,
 though, because we can estimate \(\sigma\) with the standard error
 \(S\) from the last section. This gives us an estimate \(S_{b_{1}}\)
@@ -605,7 +473,7 @@ S_{b_{1}}=\frac{S}{\sqrt{\sum_{i=1}^{n}(x_{i}-\overline{x})^{2}}}.
 \end{equation}
 
 Now, it turns out that \(b_{0}\), \(b_{1}\), and \(S\) are mutually
-independent (see the footnote in Section [[#sub-mlr-interval-est-params]]). Therefore, the quantity
+independent (see the footnote in Section \ref{sec-12-2-4}). Therefore, the quantity
 \begin{equation}
 T=\frac{b_{1}-\beta_{1}}{S_{b_{1}}}
 \end{equation}
@@ -617,7 +485,7 @@ b_{1}\pm\mathsf{t}_{\alpha/2}(\mathtt{df}=n-1)\, S_{b_{1}.}
 
 It is also sometimes of interest to construct a confidence interval
 for \(\beta_{0}\) in which case we will need the sampling distribution
-of \(b_{0}\). It is shown in Chapter [[#cha-multiple-linear-regression]] that
+of \(b_{0}\). It is shown in Chapter \ref{sec-12} that
 \begin{equation}
 b_{0}\sim\mathsf{norm}\left(\mathtt{mean}=\beta_{0},\,\mathtt{sd}=\sigma_{b_{0}}\right),
 \end{equation}
@@ -639,22 +507,16 @@ has a \(\mathsf{t}(\mathtt{df}=n-2)\) distribution and a
 b_{0}\pm\mathsf{t}_{\alpha/2}(\mathtt{df}=n-1)\, S_{b_{0}}.
 \end{equation}
 
-**** How to do it with \(\mathsf{R}\)
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-2-4-1}
 
-#+BEGIN_SRC R :exports none :results silent
-A <- matrix(as.numeric(round(carsumry$coef, 3)), nrow = 2)
-B <- round(confint(cars.lm), 3)
-#+END_SRC
+Let us take a look at the output from \texttt{summary(cars.lm)}:
 
-Let us take a look at the output from =summary(cars.lm)=:
-
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 summary(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
-#+BEGIN_example
-
+\begin{verbatim}
 Call:
 lm(formula = dist ~ speed, data = cars)
 
@@ -672,34 +534,33 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 Residual standard error: 15.38 on 48 degrees of freedom
 Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438 
 F-statistic: 89.57 on 1 and 48 DF,  p-value: 1.49e-12
-#+END_example
+\end{verbatim}
 
-In the =Coefficients= section we find the parameter estimates and
+In the \texttt{Coefficients} section we find the parameter estimates and
 their respective standard errors in the second and third columns; the
-other columns are discussed in Section [[#sec-Model-Utility-SLR]]. If we
-wanted, say, a 95% confidence interval for \(\beta_{1}\) we could use
-\( b_{1} = \) SRC_R[:eval no-export]{A[2,1]} 3.932 and \( S_{b_{1}} = \) SRC_R[:eval no-export]{A[2,2]}
+other columns are discussed in Section \ref{sec-11-3}. If we
+wanted, say, a 95\% confidence interval for \(\beta_{1}\) we could use
+\( b_{1} = \) 3.932 and \( S_{b_{1}} = \) 
 0.416 together with a \( \mathsf{t}_{0.025}(\mathtt{df}=23) \)
 critical value to calculate \( b_{1} \pm
 \mathsf{t}_{0.025}(\mathtt{df} = 23) \cdot S_{b_{1}} \).  Or, we could
-use the =confint= function.
+use the \texttt{confint} function.
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 confint(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :                  2.5 %    97.5 %
 : (Intercept) -31.167850 -3.990340
 : speed         3.096964  4.767853
+\end{verbatim}
 
-With 95% confidence, the random interval SRC_R[:eval no-export]{B[2,1]} 3.097 to
-SRC_R[:eval no-export]{B[2,2]} 4.768 covers the parameter \(\beta_{1}\).
+With 95\% confidence, the random interval 3.097 to
+4.768 covers the parameter \(\beta_{1}\).
 
-*** Interval Estimates of the Regression Line
-:PROPERTIES:
-:CUSTOM_ID: sub-slr-interval-est-regline
-:END:
+\subsection{Interval Estimates of the Regression Line}
+\label{sec-11-2-5}
 
 We have seen how to estimate the coefficients of regression line with
 both point estimates and confidence intervals. We even saw how to
@@ -707,14 +568,14 @@ estimate a value \(\hat{\mu}(x)\) on the regression line for a given
 value of \(x\), such as \(x=15\).
 
 But how good is our estimate \(\hat{\mu}(15)\)? How much confidence do
-we have in /this/ estimate? Furthermore, suppose we were going to
+we have in \emph{this} estimate? Furthermore, suppose we were going to
 observe another value of \(Y\) at \(x=15\). What could we say?
 
 Intuitively, it should be easier to get bounds on the mean (average)
-value of \(Y\) at \(x_{0}\) -- called a /confidence interval for the
-mean value of/ \(Y\) /at/ \(x_{0}\) -- than it is to get bounds on a
-future observation of \(Y\) (called a /prediction interval for/ \(Y\)
-/at/ \(x_{0}\)). As we shall see, the intuition serves us well and
+value of \(Y\) at \(x_{0}\) -- called a \emph{confidence interval for the
+mean value of} \(Y\) \emph{at} \(x_{0}\) -- than it is to get bounds on a
+future observation of \(Y\) (called a \emph{prediction interval for} \(Y\)
+\emph{at} \(x_{0}\)). As we shall see, the intuition serves us well and
 confidence intervals are shorter for the mean value, longer for the
 individual value.
 
@@ -730,7 +591,7 @@ Since \(\sigma\) is unknown we estimate it with \(S\) (we should
 expect the appearance of a \(\mathsf{t}(\mathtt{df}=n-2)\)
 distribution in the near future).
 
-A \( 100(1-\alpha)\% \) /confidence interval (CI) for/ \(\mu(x_{0})\)
+A \( 100(1-\alpha)\% \) \emph{confidence interval (CI) for} \(\mu(x_{0})\)
 is given by
 \begin{equation}
 \label{eq-SLR-conf-int-formula}
@@ -754,92 +615,84 @@ We notice that the prediction interval in Equation
 in Equation \eqref{eq-SLR-conf-int-formula}, as we expected at the
 beginning of the section.
 
-**** How to do it with \(\mathsf{R}\)
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-2-5-1}
 
 Confidence and prediction intervals are calculated in \(\mathsf{R}\)
-with the =predict= @@latex:\index{predict@\texttt{predict}}@@ function, which we
-encountered in Section [[#sub-slr-point-est-regline]]. There we neglected to
-take advantage of its additional =interval= argument. The general
+with the \texttt{predict} \index{predict@\texttt{predict}} function, which we
+encountered in Section \ref{sec-11-2-2}. There we neglected to
+take advantage of its additional \texttt{interval} argument. The general
 syntax follows.
 
-# +BEGIN_exampletoo
 
 We will find confidence and prediction intervals for the stopping
 distance of a car travelling 5, 6, and 21 mph (note from the graph
 that there are no collected data for these speeds). We have computed
-=cars.lm= earlier, and we will use this for input to the =predict=
+\texttt{cars.lm} earlier, and we will use this for input to the \texttt{predict}
 function. Also, we need to tell \(\mathsf{R}\) the values of \(x_{0}\)
 at which we want the predictions made, and store the \(x_{0}\) values
-in a data frame whose variable is labeled with the correct name. /This
-is important/.
+in a data frame whose variable is labeled with the correct name. \emph{This
+is important}.
 
-#+BEGIN_SRC R :exports code :results silent
+\begin{verbatim}
 new <- data.frame(speed = c(5, 6, 21))
-#+END_SRC
+\end{verbatim}
 
 Next we instruct \(\mathsf{R}\) to calculate the intervals. Confidence
 intervals are given by
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 predict(cars.lm, newdata = new, interval = "confidence")
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :         fit       lwr      upr
 : 1  2.082949 -7.644150 11.81005
 : 2  6.015358 -2.973341 15.00406
 : 3 65.001489 58.597384 71.40559
-
-#+BEGIN_SRC R :exports none :results output pp 
-carsCI <- round(predict(cars.lm, newdata = new, interval = "confidence"), 2)
-#+END_SRC
-
-#+RESULTS:
+\end{verbatim}
 
 Prediction intervals are given by
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 predict(cars.lm, newdata = new, interval = "prediction")
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :         fit       lwr      upr
 : 1  2.082949 -30.33359 34.49948
 : 2  6.015358 -26.18731 38.21803
 : 3 65.001489  33.42257 96.58040
-
-#+BEGIN_SRC R :exports none :results silent
-carsPI <- round(predict(cars.lm, newdata = new, interval = "prediction"), 2)
-#+END_SRC
-
-# +END_exampletoo
+\end{verbatim}
 
 
-The type of interval is dictated by the =interval= argument (which is
-=none= by default), and the default confidence level is 95\% (which
-can be changed with the =level= argument).
 
-# +BEGIN_exampletoo
+The type of interval is dictated by the \texttt{interval} argument (which is
+\texttt{none} by default), and the default confidence level is 95\% (which
+can be changed with the \texttt{level} argument).
 
-Using the =cars= data,
-1. Report a point estimate of and a 95% confidence interval for the
-   mean stopping distance for a car travelling 5 mph.  The fitted
-   value for \(x = 5\) is SRC_R[:eval no-export]{carsCI[1, 1]} 2.08, so a point
-   estimate would be SRC_R[:eval no-export]{carsCI[1, 1]} 2.08 ft. The 95% CI is
-   given by SRC_R[:eval no-export]{carsCI[1, 2]} -7.64 to SRC_R[:eval no-export]{carsCI[1, 3]} 11.81, so
-   with 95% confidence the mean stopping distance lies somewhere
-   between SRC_R[:eval no-export]{carsCI[1, 2]} -7.64 ft and SRC_R[:eval no-export]{carsCI[1, 3]} 11.81 ft.
-2. Report a point prediction for and a 95% prediction interval for the
-   stopping distance of a hypothetical car travelling 21 mph.  The
-   fitted value for \(x = 21\) is SRC_R[:eval no-export]{carsPI[3, 1]} 65, so a point
-   prediction for the stopping distance is SRC_R[:eval no-export]{carsPI[3, 1]} 65 ft. The
-   95% PI is SRC_R[:eval no-export]{carsPI[3, 2]} 33.42 to SRC_R[:eval no-export]{carsPI[3,3]} 96.58, so with
-   95% confidence we may assert that the hypothetical stopping
-   distance for a car travelling 21 mph would lie somewhere between
-   SRC_R[:eval no-export]{carsPI[3, 2]} 33.42 ft and SRC_R[:eval no-export]{carsPI[3, 3]} 96.58 ft.
-# +END_exampletoo
 
-*** Graphing the Confidence and Prediction Bands
+Using the \texttt{cars} data,
+\begin{enumerate}
+\item Report a point estimate of and a 95\% confidence interval for the
+mean stopping distance for a car travelling 5 mph.  The fitted
+value for \(x = 5\) is 2.08, so a point
+estimate would be 2.08 ft. The 95\% CI is
+given by -7.64 to 11.81, so
+with 95\% confidence the mean stopping distance lies somewhere
+between -7.64 ft and 11.81 ft.
+\item Report a point prediction for and a 95\% prediction interval for the
+stopping distance of a hypothetical car travelling 21 mph.  The
+fitted value for \(x = 21\) is 65, so a point
+prediction for the stopping distance is 65 ft. The
+95\% PI is 33.42 to 96.58, so with
+95\% confidence we may assert that the hypothetical stopping
+distance for a car travelling 21 mph would lie somewhere between
+33.42 ft and 96.58 ft.
+\end{enumerate}
+
+\subsection{Graphing the Confidence and Prediction Bands}
+\label{sec-11-2-6}
 
 We earlier guessed that a bound on the value of a single new
 observation would be inherently less certain than a bound for an
@@ -850,13 +703,13 @@ standard deviations in Equations \eqref{eq-SLR-conf-int-formula} and
 to see a picture to drive the point home.
 
 We may plot the confidence and prediction intervals with one fell
-swoop using the =ci.plot= function from the =HH= package
-\cite{HH}. The graph is displayed in Figure [[fig-carscipi]].
+swoop using the \texttt{ci.plot} function from the \texttt{HH} package
+\cite{HH}. The graph is displayed in Figure \ref{fig-carscipi}.
 
-#+BEGIN_SRC R :exports code :eval never
+\begin{verbatim}
 library(HH)
 ci.plot(cars.lm)
-#+END_SRC
+\end{verbatim}
 
 Notice that the bands curve outward from the regression line as the
 \(x\) values move away from the center. This is expected once we
@@ -864,26 +717,21 @@ notice the \((x_{0}-\overline{x})^{2}\) term in the standard deviation
 formulas in Equations \eqref{eq-SLR-conf-int-formula} and
 \eqref{eq-SLR-pred-int-formula}.
 
-#+NAME: carscipi
-#+BEGIN_SRC R :exports both :results graphics :file fig/slr-carscipi.ps
+\begin{verbatim}
 print(ci.plot(cars.lm))
-#+END_SRC
+\end{verbatim}
 
-#+NAME: fig-carscipi
-#+CAPTION[Scatterplot with confidence/prediction bands for the =cars= data]: \small A scatterplot with confidence/prediction bands for the =cars= data.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: carscipi
-[[file:fig/slr-carscipi.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-carscipi.ps}
+\caption[Scatterplot with confidence/prediction bands for the \texttt{cars} data]{\label{fig-carscipi}\small A scatterplot with confidence/prediction bands for the \texttt{cars} data.}
+\end{figure}
 
-** Model Utility and Inference
-:PROPERTIES:
-:CUSTOM_ID: sec-Model-Utility-SLR
-:END:
+\section{Model Utility and Inference}
+\label{sec-11-3}
 
-*** Hypothesis Tests for the Parameters
-:PROPERTIES:
-:CUSTOM_ID: sub-slr-hypoth-test-params
-:END:
+\subsection{Hypothesis Tests for the Parameters}
+\label{sec-11-3-1}
 
 Much of the attention of SLR is directed toward \(\beta_{1}\) because
 when \( \beta_{1}\neq 0 \) the mean value of \(Y\) increases (or
@@ -897,7 +745,7 @@ the alternative hypothesis \(H_{1}:\beta_{1}\neq0\), and to do that we
 need to know the sampling distribution of \(b_{1}\) when the null
 hypothesis is true.
 
-To this end we already know from Section [[#sub-slr-interval-est-params]] that
+To this end we already know from Section \ref{sec-11-2-4} that
 the quantity
 
 \begin{equation} 
@@ -911,22 +759,19 @@ with values under a \(\mathsf{t}(\mathtt{df}=n-2)\) curve.
 
 Similarly, we may test the hypothesis \(H_{0}:\beta_{0}=0\) versus the
 alternative \(H_{1}:\beta_{0}\neq0\) with the statistic
-\(T=b_{0}/S_{b_{0}}\), where \(S_{b_{0}}\) is given in Section [[#sub-slr-interval-est-params]]. The test is conducted the same way as for
+\(T=b_{0}/S_{b_{0}}\), where \(S_{b_{0}}\) is given in Section \ref{sec-11-2-4}. The test is conducted the same way as for
 \(\beta_{1}\).
 
-**** How to do it with \(\mathsf{R}\)
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-3-1-1}
 
-Let us take another look at the output from =summary(cars.lm)=:
+Let us take another look at the output from \texttt{summary(cars.lm)}:
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 summary(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
-#+BEGIN_example
-null device 
-          1
-
+\begin{verbatim}
 Call:
 lm(formula = dist ~ speed, data = cars)
 
@@ -944,22 +789,23 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 Residual standard error: 15.38 on 48 degrees of freedom
 Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438 
 F-statistic: 89.57 on 1 and 48 DF,  p-value: 1.49e-12
-#+END_example
+\end{verbatim}
 
-In the =Coefficients= section we find the \(t\) statistics and the
+In the \texttt{Coefficients} section we find the \(t\) statistics and the
 \(p\)-values associated with the tests that the respective parameters
 are zero in the fourth and fifth columns. Since the \(p\)-values are
 (much) less than 0.05, we conclude that there is strong evidence that
 the parameters \(\beta_{1}\neq0\) and \(\beta_{0}\neq0\), and as such,
 we say that there is a statistically significant linear relationship
-between =dist= and =speed=.
+between \texttt{dist} and \texttt{speed}.
 
-*** Simple Coefficient of Determination
+\subsection{Simple Coefficient of Determination}
+\label{sec-11-3-2}
 
 It would be nice to have a single number that indicates how well our
-linear regression model is doing, and the /simple coefficient of
-determination/ is designed for that purpose. In what follows, we
-observe the values \(Y_{1}\), \(Y_{2}\), ...,\(Y_{n}\), and the goal
+linear regression model is doing, and the \emph{simple coefficient of
+determination} is designed for that purpose. In what follows, we
+observe the values \(Y_{1}\), \(Y_{2}\), \ldots{},\(Y_{n}\), and the goal
 is to estimate \(\mu(x_{0})\), the mean value of \(Y\) at the location
 \(x_{0}\).
 
@@ -972,7 +818,7 @@ variance is proportional to
 \begin{equation}
 SSTO=\sum_{i=1}^{n}(Y_{i}-\overline{Y})^{2}.
 \end{equation}
-The acronym \(SSTO\) stands for /total sum of squares/.  And we have
+The acronym \(SSTO\) stands for \emph{total sum of squares}.  And we have
 additional information, namely, we have values \(x_{i}\) associated
 with each value of \(Y_{i}\). We have seen that this information leads
 us to the estimate \(\hat{Y_{i}}\) and the errors incurred are just
@@ -981,8 +827,8 @@ with these errors can be measured with
 \begin{equation}
 SSE=\sum_{i=1}^{n}(Y_{i}-\hat{Y_{i}})^{2}.
 \end{equation}
-We have seen the \(SSE\) before, which stands for the /sum of squared
-errors/ or /error sum of squares/. Of course, we would expect the
+We have seen the \(SSE\) before, which stands for the \emph{sum of squared
+errors} or \emph{error sum of squares}. Of course, we would expect the
 error to be less in the latter case, since we have used more
 information. The improvement in our estimation as a result of the
 linear regression model can be measured with the difference \[
@@ -991,8 +837,8 @@ and we measure the variation in these errors with
 \begin{equation}
 SSR=\sum_{i=1}^{n}(\hat{Y_{i}}-\overline{Y})^{2},
 \end{equation}
-also known as the /regression sum of squares/. It is not obvious, but
-some algebra proved a famous result known as the *ANOVA Equality*:
+also known as the \emph{regression sum of squares}. It is not obvious, but
+some algebra proved a famous result known as the \textbf{ANOVA Equality}:
 \begin{equation}
 \label{eq-anovaeq}
 \sum_{i=1}^{n}(Y_{i}-\overline{Y})^{2}=\sum_{i=1}^{n}(\hat{Y_{i}}-\overline{Y})^{2}+\sum_{i=1}^{n}(Y_{i}-\hat{Y_{i}})^{2}
@@ -1002,16 +848,16 @@ or in other words,
 SSTO=SSR+SSE.
 \end{equation}
 This equality has a nice interpretation. Consider \(SSTO\) to be the
-/total variation/ of the errors. Think of a decomposition of the total
+\emph{total variation} of the errors. Think of a decomposition of the total
 variation into pieces: one piece measuring the reduction of error from
-using the linear regression model, or /explained variation/ (\(SSR\)),
+using the linear regression model, or \emph{explained variation} (\(SSR\)),
 while the other represents what is left over, that is, the errors that
-the linear regression model doesn't explain, or /unexplained
-variation/ (\(SSE\)). In this way we see that the ANOVA equality
+the linear regression model doesn't explain, or \emph{unexplained
+variation} (\(SSE\)). In this way we see that the ANOVA equality
 merely partitions the variation into \[ \mbox{total
 variation}=\mbox{explained variation}+\mbox{unexplained variation}.
 \] For a single number to summarize how well our model is doing we use
-the /simple coefficient of determination/ \(r^{2}\), defined by
+the \emph{simple coefficient of determination} \(r^{2}\), defined by
 \begin{equation}
 r^{2}=1-\frac{SSE}{SSTO}.
 \end{equation}
@@ -1028,18 +874,19 @@ sign of the slope estimate \(b_{1}\). That is, if the regression line
 \(r=\sqrt{r^{2}}\). Likewise, if the slope of \(\hat{\mu}(x)\) is
 negative, then \(r=-\sqrt{r^{2}}\).
 
-**** How to do it with \(\mathsf{R}\)
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-3-2-1}
 
 The primary method to display partitioned sums of squared errors is
-with an /ANOVA table/. The command in \(\mathsf{R}\) to produce such a
-table is =anova=. The input to =anova= is the result of an =lm= call
-which for the =cars= data is =cars.lm=.
+with an \emph{ANOVA table}. The command in \(\mathsf{R}\) to produce such a
+table is \texttt{anova}. The input to \texttt{anova} is the result of an \texttt{lm} call
+which for the \texttt{cars} data is \texttt{cars.lm}.
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 anova(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : Analysis of Variance Table
 : 
 : Response: dist
@@ -1048,6 +895,7 @@ anova(cars.lm)
 : Residuals 48  11354   236.5                     
 : ---
 : Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
 
 The output gives
 \[
@@ -1055,43 +903,43 @@ r^{2}=1-\frac{SSE}{SSR+SSE}=1-\frac{11353.5}{21185.5+11353.5}\approx0.65.
 \]
 
 The interpretation should be: "The linear regression line accounts for
-approximately 65% of the variation of =dist= as explained by =speed=".
+approximately 65\% of the variation of \texttt{dist} as explained by \texttt{speed}".
 
-The value of \(r^{2}\) is stored in the =r.squared= component of
-=summary(cars.lm)=, which we called =carsumry=.
+The value of \(r^{2}\) is stored in the \texttt{r.squared} component of
+\texttt{summary(cars.lm)}, which we called \texttt{carsumry}.
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 carsumry$r.squared
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : [1] 0.6510794
+\end{verbatim}
 
 We already knew this. We saw it in the next to the last line of the
-=summary(cars.lm)= output where it was called =Multiple
-R-squared=. Listed right beside it is the =Adjusted R-squared= which
-we will discuss in Chapter [[#cha-multiple-linear-regression]].  For the =cars=
+\texttt{summary(cars.lm)} output where it was called \texttt{Multiple
+R-squared}. Listed right beside it is the \texttt{Adjusted R-squared} which
+we will discuss in Chapter \ref{sec-12}.  For the \texttt{cars}
 data, we find \(r\) to be
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 sqrt(carsumry$r.squared)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : [1] 0.8068949
+\end{verbatim}
 
 We choose the principal square root because the slope of the
 regression line is positive.
 
-*** Overall /F/ statistic
-:PROPERTIES:
-:CUSTOM_ID: sub-slr-overall-F-statistic
-:END:
+\subsection{Overall \emph{F} statistic}
+\label{sec-11-3-3}
 
 There is another way to test the significance of the linear regression
 model. In SLR, the new way also tests the hypothesis
 \(H_{0}:\beta_{1}=0\) versus \(H_{1}:\beta_{1}\neq0\), but it is done
-with a new test statistic called the /overall F statistic/. It is
+with a new test statistic called the \emph{overall F statistic}. It is
 defined by
 \begin{equation}
 \label{eq-slr-overall-F-statistic}
@@ -1106,8 +954,8 @@ variation.
 
 All this being said, we have not yet gained much from the overall
 \(F\) statistic because we already knew from Section
-[[#sub-slr-hypoth-test-params]] how to test \(H_{0}:\beta_{1} =
-0\)... we use the Student's \(t\) statistic. What is worse is that (in
+\ref{sec-11-3-1} how to test \(H_{0}:\beta_{1} =
+0\)\ldots{} we use the Student's \(t\) statistic. What is worse is that (in
 the simple linear regression model) it can be proved that the \(F\) in
 Equation \eqref{eq-slr-overall-F-statistic} is exactly the Student's
 \(t\) statistic for \(\beta_{1}\) squared,
@@ -1120,20 +968,21 @@ So why bother to define the \(F\) statistic? Why not just square the
 \(t\) statistic and be done with it? The answer is that the \(F\)
 statistic has a more complicated interpretation and plays a more
 important role in the multiple linear regression model which we will
-study in Chapter [[#cha-multiple-linear-regression]]. See Section
-[[#sub-mlr-Overall-F-Test]] for details.
+study in Chapter \ref{sec-12}. See Section
+\ref{sec-12-3-2} for details.
 
-**** How to do it with \(\mathsf{R}\)
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-3-3-1}
 
 The overall \(F\) statistic and \(p\)-value are displayed in the
-bottom line of the =summary(cars.lm)= output. It is also shown in the
-final columns of =anova(cars.lm)=:
+bottom line of the \texttt{summary(cars.lm)} output. It is also shown in the
+final columns of \texttt{anova(cars.lm)}:
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 anova(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : Analysis of Variance Table
 : 
 : Response: dist
@@ -1142,56 +991,49 @@ anova(cars.lm)
 : Residuals 48  11354   236.5                     
 : ---
 : Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
 
-#+BEGIN_SRC R :exports none :results silent
-tmpf <- round(as.numeric(carsumry$fstatistic[1]), 2)
-#+END_SRC
-
-Here we see that the \(F\) statistic is SRC_R[:eval no-export]{tmpf} 89.57 with a
+Here we see that the \(F\) statistic is 89.57 with a
 \(p\)-value very close to zero. The conclusion: there is very strong
 evidence that \(H_{0}:\beta_{1} = 0 \) is false, that is, there is
 strong evidence that \( \beta_{1} \neq 0 \). Moreover, we conclude
-that the regression relationship between =dist= and =speed= is
+that the regression relationship between \texttt{dist} and \texttt{speed} is
 significant.
 
 Note that the value of the \(F\) statistic is the same as the
-Student's \(t\) statistic for =speed= squared.
+Student's \(t\) statistic for \texttt{speed} squared.
 
-** Residual Analysis
-:PROPERTIES:
-:CUSTOM_ID: sec-Residual-Analysis-SLR
-:END:
+\section{Residual Analysis}
+\label{sec-11-4}
 
 We know from our model that \(Y=\mu(x)+\epsilon\), or in other words,
 \(\epsilon=Y-\mu(x)\). Further, we know that
 \(\epsilon\sim\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=\sigma)\). We
-may estimate \(\epsilon_{i}\) with the /residual/
+may estimate \(\epsilon_{i}\) with the \emph{residual}
 \(E_{i}=Y_{i}-\hat{Y_{i}}\), where
 \(\hat{Y_{i}}=\hat{\mu}(x_{i})\). If the regression assumptions hold,
 then the residuals should be normally distributed. We check this in
-Section [[#sub-Normality-Assumption]]. Further, the residuals should have mean
+Section \ref{sec-11-4-1}. Further, the residuals should have mean
 zero with constant variance \(\sigma^{2}\), and we check this in
-Section [[#sub-Constant-Variance-Assumption]]. Last, the residuals should be
-independent, and we check this in Section [[#sub-Independence-Assumption]].
+Section \ref{sec-11-4-2}. Last, the residuals should be
+independent, and we check this in Section \ref{sec-11-4-3}.
 
 In every case, we will begin by looking at residual plots -- that is,
 scatterplots of the residuals \(E_{i}\) versus index or predicted
 values \(\hat{Y_{i}}\) -- and follow up with hypothesis tests.
 
-*** Normality Assumption
-:PROPERTIES:
-:CUSTOM_ID: sub-Normality-Assumption
-:END:
+\subsection{Normality Assumption}
+\label{sec-11-4-1}
 
 We can assess the normality of the residuals with graphical methods
 and hypothesis tests. To check graphically whether the residuals are
-normally distributed we may look at histograms or /q-q/ plots. We
-first examine a histogram in Figure [[fig-Normal-q-q-plot-cars]]. There we see
+normally distributed we may look at histograms or \emph{q-q} plots. We
+first examine a histogram in Figure \ref{fig-Normal-q-q-plot-cars}. There we see
 that the distribution of the residuals appears to be mound shaped, for
 the most part. We can plot the order statistics of the sample versus
 quantiles from a \(\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=1)\)
-distribution with the command =plot(cars.lm, which = 2)=, and the
-results are in Figure [[fig-Normal-q-q-plot-cars]]. If the assumption of
+distribution with the command \texttt{plot(cars.lm, which = 2)}, and the
+results are in Figure \ref{fig-Normal-q-q-plot-cars}. If the assumption of
 normality were true, then we would expect points randomly scattered
 about the dotted straight line displayed in the figure. In this case,
 we see a slight departure from normality in that the dots show
@@ -1200,18 +1042,18 @@ on the upper end of the plot also appear begin to stray from the
 line. We would say there is some evidence that the residuals are not
 perfectly normal.
 
-#+NAME: Normal-q-q-plot-cars
-#+BEGIN_SRC R :exports both :results graphics :file fig/slr-Normal-q-q-plot-cars.ps
+\begin{verbatim}
 plot(cars.lm, which = 2)
-#+END_SRC
+\end{verbatim}
 
-#+NAME: fig-Normal-q-q-plot-cars
-#+CAPTION[Normal q-q plot of the residuals for the =cars= data]: \small Used for checking the normality assumption. Look out for any curvature or substantial departures from the straight line; hopefully the dots hug the line closely.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: Normal-q-q-plot-cars
-[[file:fig/slr-Normal-q-q-plot-cars.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-Normal-q-q-plot-cars.ps}
+\caption[Normal q-q plot of the residuals for the \texttt{cars} data]{\label{fig-Normal-q-q-plot-cars}\small Used for checking the normality assumption. Look out for any curvature or substantial departures from the straight line; hopefully the dots hug the line closely.}
+\end{figure}
 
-**** Testing the Normality Assumption
+\subsubsection{Testing the Normality Assumption}
+\label{sec-11-4-1-1}
 
 Even though we may be concerned about the plots, we can use tests to
 determine if the evidence present is statistically significant, or if
@@ -1227,23 +1069,24 @@ W=\frac{\left(\sum_{i=1}^{n}a_{i}E_{(i)}\right)^{2}}{\sum_{j=1}^{n}E_{j}^{2}},
 \end{equation}
 where the \(E_{(i)}\) are the ordered residuals and the \(a_{i}\) are
 constants derived from the order statistics of a sample of size \(n\)
-from a normal distribution. See Section [[#sub-Shapiro-Wilk-Normality-Test]].
-We perform the Shapiro-Wilk test below, using the =shapiro.test=
-function from the =stats= package \cite{stats}. The hypotheses are \[
+from a normal distribution. See Section \ref{sec-10-5-2}.
+We perform the Shapiro-Wilk test below, using the \texttt{shapiro.test}
+function from the \texttt{stats} package \cite{stats}. The hypotheses are \[
 H_{0}:\mbox{ the residuals are normally distributed } \] versus \[
 H_{1}:\mbox{ the residuals are not normally distributed.}  \] The
 results from \(\mathsf{R}\) are
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 shapiro.test(residuals(cars.lm))
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : 
 : 	Shapiro-Wilk normality test
 : 
 : data:  residuals(cars.lm)
 : W = 0.9451, p-value = 0.02152
+\end{verbatim}
 
 For these data we would reject the assumption of normality of the
 residuals at the \(\alpha=0.05\) significance level, but do not lose
@@ -1255,10 +1098,8 @@ independence will sometimes affect the quantile plots and histograms,
 therefore it is wise to delay final decisions regarding normality
 until all diagnostic measures have been investigated.
 
-*** Constant Variance Assumption
-:PROPERTIES:
-:CUSTOM_ID: sub-Constant-Variance-Assumption
-:END:
+\subsection{Constant Variance Assumption}
+\label{sec-11-4-2}
 
 We will again go to residual plots to try and determine if the spread
 of the residuals is changing over time (or index). However, it is
@@ -1268,12 +1109,12 @@ variance! In fact, it can be shown that the variance of the residual
 \begin{equation}
 \mbox{Var$(E_{i})$}=\sigma^{2}(1-h_{ii}),\quad i=1,2,\ldots,n,
 \end{equation}
-where \(h_{ii}\) is a quantity called the /leverage/ which is defined
+where \(h_{ii}\) is a quantity called the \emph{leverage} which is defined
 below. Consequently, in order to check the constant variance
 assumption we must standardize the residuals before plotting. We
 estimate the standard error of \(E_{i}\) with
-\(s_{E_{i}}=s\sqrt{(1-h_{ii})}\) and define the /standardized
-residuals/ \(R_{i}\), \(i=1,2,\ldots,n\), by
+\(s_{E_{i}}=s\sqrt{(1-h_{ii})}\) and define the \emph{standardized
+residuals} \(R_{i}\), \(i=1,2,\ldots,n\), by
 \begin{equation} 
 R_{i}=\frac{E_{i}}{s\,\sqrt{1-h_{ii}}},\quad i=1,2,\ldots,n.
 \end{equation}
@@ -1289,22 +1130,22 @@ variance and a consequent departure from the regression assumptions,
 the first an increase, the second a decrease.
 
 In this case, we plot the standardized residuals versus the fitted
-values. The graph may be seen in Figure [[fig-std-resids-fitted-cars]]. For
+values. The graph may be seen in Figure \ref{fig-std-resids-fitted-cars}. For
 these data there does appear to be somewhat of a slight fanning-out of
 the residuals.
 
-#+NAME: std-resids-fitted-cars
-#+BEGIN_SRC R :exports both :results graphics :file fig/slr-std-resids-fitted-cars.ps
+\begin{verbatim}
 plot(cars.lm, which = 3)
-#+END_SRC
+\end{verbatim}
 
-#+NAME: fig-std-resids-fitted-cars
-#+CAPTION[Plot of standardized residuals against the fitted values for the =cars= data]: \small Used for checking the constant variance assumption. Watch out for any fanning out (or in) of the dots; hopefully they fall in a constant band.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: std-resids-fitted-cars
-[[file:fig/slr-std-resids-fitted-cars.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-std-resids-fitted-cars.ps}
+\caption[Plot of standardized residuals against the fitted values for the \texttt{cars} data]{\label{fig-std-resids-fitted-cars}\small Used for checking the constant variance assumption. Watch out for any fanning out (or in) of the dots; hopefully they fall in a constant band.}
+\end{figure}
 
-**** Testing the Constant Variance Assumption
+\subsubsection{Testing the Constant Variance Assumption}
+\label{sec-11-4-2-1}
 
 We will use the Breusch-Pagan test to decide whether the variance of
 the residuals is nonconstant. The null hypothesis is that the variance
@@ -1325,28 +1166,26 @@ BP=n\sum_{i=1}^{n}\hat{W}_{i}^{2}\div\sum_{i=1}^{n}W_{i}^{2}.
 We reject the null hypothesis if \(BP\) is too large, which happens
 when the explained variation i the new model is large relative to the
 unexplained variation in the original model.  We do it in
-\(\mathsf{R}\) with the =bptest= function from the =lmtest= package
+\(\mathsf{R}\) with the \texttt{bptest} function from the \texttt{lmtest} package
 \cite{lmtest}.
-#+BEGIN_SRC R :exports both :results output pp
+\begin{verbatim}
 bptest(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : 
 : 	studentized Breusch-Pagan test
 : 
 : data:  cars.lm
 : BP = 3.2149, df = 1, p-value = 0.07297
+\end{verbatim}
 
 For these data we would not reject the null hypothesis at the
 \(\alpha=0.05\) level. There is relatively weak evidence against the
 assumption of constant variance.
 
-*** Independence Assumption
-    SCHEDULED: <2014-06-05 Thu>
-:PROPERTIES:
-:CUSTOM_ID: sub-Independence-Assumption
-:END:
+\subsection{Independence Assumption}
+\label{sec-11-4-3}
 
 One of the strongest of the regression assumptions is the one
 regarding independence. Departures from the independence assumption
@@ -1362,23 +1201,23 @@ residuals being followed by long sequences of negative ones.
 
 On the other hand, negative correlation implies positive residuals
 followed by negative residuals, which are then followed by positive
-residuals, /etc/. Consequently, negatively correlated residuals are
+residuals, \emph{etc}. Consequently, negatively correlated residuals are
 often associated with an alternating pattern in the residual plots. We
-examine the residual plot in Figure [[fig-resids-fitted-cars]]. There is no
+examine the residual plot in Figure \ref{fig-resids-fitted-cars}. There is no
 obvious cyclical wave pattern or structure to the residual plot.
 
-#+NAME: resids-fitted-cars
-#+BEGIN_SRC R :exports both :results graphics :file fig/slr-resids-fitted-cars.ps
+\begin{verbatim}
 plot(cars.lm, which = 1)
-#+END_SRC
+\end{verbatim}
 
-#+NAME: fig-resids-fitted-cars
-#+CAPTION[Plot of the residuals versus the fitted values for the =cars= data]: \small Used for checking the independence assumption. Watch out for any patterns or structure; hopefully the points are randomly scattered on the plot.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: resids-fitted-cars
-[[file:fig/slr-resids-fitted-cars.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-resids-fitted-cars.ps}
+\caption[Plot of the residuals versus the fitted values for the \texttt{cars} data]{\label{fig-resids-fitted-cars}\small Used for checking the independence assumption. Watch out for any patterns or structure; hopefully the points are randomly scattered on the plot.}
+\end{figure}
 
-**** Testing the Independence Assumption
+\subsubsection{Testing the Independence Assumption}
+\label{sec-11-4-3-1}
 
 We may statistically test whether there is evidence of autocorrelation
 in the residuals with the Durbin-Watson test. The test is based on the
@@ -1387,29 +1226,31 @@ statistic
 D=\frac{\sum_{i=2}^{n}(E_{i}-E_{i-1})^{2}}{\sum_{j=1}^{n}E_{j}^{2}}.
 \end{equation}
 Exact critical values are difficult to obtain, but \(\mathsf{R}\) will
-calculate the /p-value/ to great accuracy. It is performed with the
-=dwtest= function from the =lmtest= package \cite{lmtest}. We will
+calculate the \emph{p-value} to great accuracy. It is performed with the
+\texttt{dwtest} function from the \texttt{lmtest} package \cite{lmtest}. We will
 conduct a two sided test that the correlation is not zero, which is
 not the default (the default is to test that the autocorrelation is
 positive).
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 dwtest(cars.lm, alternative = "two.sided")
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : 
 : 	Durbin-Watson test
 : 
 : data:  cars.lm
 : DW = 1.6762, p-value = 0.1904
 : alternative hypothesis: true autocorrelation is not 0
+\end{verbatim}
 
 In this case we do not reject the null hypothesis at the
 \(\alpha=0.05\) significance level; there is very little evidence of
 nonzero autocorrelation in the residuals.
 
-*** Remedial Measures
+\subsection{Remedial Measures}
+\label{sec-11-4-4}
 
 We often find problems with our model that suggest that at least one
 of the three regression assumptions is violated. What do we do then?
@@ -1417,65 +1258,69 @@ There are many measures at the statistician's disposal, and we mention
 specific steps one can take to improve the model under certain types
 of violation.
 
-- Mean response is not linear :: We can directly modify the model to
-     better approximate the mean response. In particular, perhaps a
-     polynomial regression function of the form \[ \mu(x) =
+\begin{description}
+\item[{Mean response is not linear}] We can directly modify the model to
+better approximate the mean response. In particular, perhaps a
+polynomial regression function of the form \[ \mu(x) =
      \beta_{0} + \beta_{1}x_{1} + \beta_{2}x_{1}^{2} \] would be
-     appropriate. Alternatively, we could have a function of the form
-     \[ \mu(x)=\beta_{0}\mathrm{e}^{\beta_{1}x}.  \] Models like these
-     are studied in nonlinear regression courses.
-- Error variance is not constant :: Sometimes a transformation of the
-     dependent variable will take care of the problem. There is a
-     large class of them called /Box-Cox transformations/. They take
-     the form
-     \begin{equation}
-     Y^{\ast}=Y^{\lambda},
-     \end{equation}
-     where \(\lambda\) is a constant. (The method proposed by Box and
-     Cox will determine a suitable value of \(\lambda\) automatically
-     by maximum likelihood). The class contains the transformations
-     @@latex:\begin{alignat*}{1} \lambda=2,\quad &
+appropriate. Alternatively, we could have a function of the form
+\[ \mu(x)=\beta_{0}\mathrm{e}^{\beta_{1}x}.  \] Models like these
+are studied in nonlinear regression courses.
+\item[{Error variance is not constant}] Sometimes a transformation of the
+dependent variable will take care of the problem. There is a
+large class of them called \emph{Box-Cox transformations}. They take
+the form
+\begin{equation}
+Y^{\ast}=Y^{\lambda},
+\end{equation}
+where \(\lambda\) is a constant. (The method proposed by Box and
+Cox will determine a suitable value of \(\lambda\) automatically
+by maximum likelihood). The class contains the transformations
+\begin{alignat*}{1} \lambda=2,\quad &
      Y^{\ast}=Y^{2}\\ \lambda=0.5,\quad &
      Y^{\ast}=\sqrt{Y}\\ \lambda=0,\quad & Y^{\ast}=\ln\:
-     Y\\ \lambda=-1,\quad & Y^{\ast}= 1/Y \end{alignat*}@@
-     Alternatively, we can use the method of /weighted least
-     squares/. This is studied in more detail in later classes.
-- Error distribution is not normal :: The same transformations for
-     stabilizing the variance are equally appropriate for smoothing
-     the residuals to a more Gaussian form. In fact, often we will
-     kill two birds with one stone.
-- Errors are not independent :: There is a large class of
-     autoregressive models to be used in this situation which occupy
-     the latter part of Chapter [[#cha-Time-Series]].
+     Y\\ \lambda=-1,\quad & Y^{\ast}= 1/Y \end{alignat*}
+Alternatively, we can use the method of \emph{weighted least
+squares}. This is studied in more detail in later classes.
+\item[{Error distribution is not normal}] The same transformations for
+stabilizing the variance are equally appropriate for smoothing
+the residuals to a more Gaussian form. In fact, often we will
+kill two birds with one stone.
+\item[{Errors are not independent}] There is a large class of
+autoregressive models to be used in this situation which occupy
+the latter part of Chapter \ref{sec-16}.
+\end{description}
 
-** Other Diagnostic Tools
-:PROPERTIES:
-:CUSTOM_ID: sec-Other-Diagnostic-Tools-SLR
-:END:
+\section{Other Diagnostic Tools}
+\label{sec-11-5}
 
 There are two types of observations with which we must be especially
 careful:
-- Influential observations :: are those that have a substantial effect
-     on our estimates, predictions, or inferences. A small change in
-     an influential observation is followed by a large change in the
-     parameter estimates or inferences.
-- Outlying observations :: are those that fall fall far from the rest
-     of the data. They may be indicating a lack of fit for our
-     regression model, or they may just be a mistake or typographical
-     error that should be corrected. Regardless, special attention
-     should be given to these observations. An outlying observation
-     may or may not be influential.
+\begin{description}
+\item[{Influential observations}] are those that have a substantial effect
+on our estimates, predictions, or inferences. A small change in
+an influential observation is followed by a large change in the
+parameter estimates or inferences.
+\item[{Outlying observations}] are those that fall fall far from the rest
+of the data. They may be indicating a lack of fit for our
+regression model, or they may just be a mistake or typographical
+error that should be corrected. Regardless, special attention
+should be given to these observations. An outlying observation
+may or may not be influential.
+\end{description}
 
 We will discuss outliers first because the notation builds
 sequentially in that order.
-*** Outliers
+\subsection{Outliers}
+\label{sec-11-5-1}
 There are three ways that an observation \((x_{i},y_{i})\) might be
 identified as an outlier: it can have an \(x_{i}\) value which falls
 far from the other \(x\) values, it can have a \(y_{i}\) value which
 falls far from the other \(y\) values, or it can have both its
 \(x_{i}\) and \(y_{i}\) values falling far from the other \(x\) and
 \(y\) values.
-*** Leverage
+\subsection{Leverage}
+\label{sec-11-5-2}
 Leverage statistics are designed to identify observations which have
 \(x\) values that are far away from the rest of the data. In the
 simple linear regression model the leverage of \(x_{i}\) is denoted by
@@ -1507,10 +1352,11 @@ are suspect. Another rule of thumb is to say that values bigger than
 0.5 indicate high leverage, while values between 0.3 and 0.5 indicate
 moderate leverage.
 
-*** Standardized and Studentized Deleted Residuals
+\subsection{Standardized and Studentized Deleted Residuals}
+\label{sec-11-5-3}
 
-We have already encountered the /standardized residuals/ \(r_{i}\) in
-Section [[#sub-Constant-Variance-Assumption]]; they are merely residuals that
+We have already encountered the \emph{standardized residuals} \(r_{i}\) in
+Section \ref{sec-11-4-2}; they are merely residuals that
 have been divided by their respective standard deviations:
 \begin{equation}
 R_{i}=\frac{E_{i}}{S\sqrt{1-h_{ii}}},\quad i=1,2,\ldots,n.
@@ -1519,12 +1365,12 @@ Values of \(|R_{i}| > 2\) are extreme and suggest that the observation has an ou
 
 Now delete the \(i^{\mathrm{th}}\) case and fit the regression
 function to the remaining \(n - 1\) cases, producing a fitted value
-\(\hat{Y}_{(i)}\) with /deleted residual/
+\(\hat{Y}_{(i)}\) with \emph{deleted residual}
 \(D_{i}=Y_{i}-\hat{Y}_{(i)}\). It is shown in later classes that
 \begin{equation}
 \mbox{Var $(D_{i})$}=\frac{S_{(i)}^{2}}{1-h_{ii}},\quad i=1,2,\ldots,n,
 \end{equation}
-so that the /studentized deleted residuals/ \(t_{i}\) defined by
+so that the \emph{studentized deleted residuals} \(t_{i}\) defined by
 \begin{equation}
 \label{eq-slr-studentized-deleted-resids}
 t_{i}=\frac{D_{i}}{S_{(i)}/(1-h_{ii})},\quad i=1,2,\ldots,n,
@@ -1534,88 +1380,96 @@ have a \(\mathsf{t}(\mathtt{df}=n-3)\) distribution and we compare observed valu
 The folklore in regression classes is that a test based on the
 statistic in Equation \eqref{eq-slr-studentized-deleted-resids} can be
 too liberal. A rule of thumb is if we suspect an observation to be an
-outlier /before/ seeing the data then we say it is significantly
+outlier \emph{before} seeing the data then we say it is significantly
 outlying if its two-tailed \(p\)-value is less than \(\alpha\), but if
-we suspect an observation to be an outlier /after/ seeing the data
+we suspect an observation to be an outlier \emph{after} seeing the data
 then we should only say it is significantly outlying if its two-tailed
 \(p\)-value is less than \(\alpha/n\). The latter rule of thumb is
-called the /Bonferroni approach/ and can be overly conservative for
+called the \emph{Bonferroni approach} and can be overly conservative for
 large data sets. The responsible statistician should look at the data
 and use his/her best judgement, in every case.
 
-**** How to do it with \(\mathsf{R}\)
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-5-3-1}
 
-We can calculate the standardized residuals with the =rstandard=
-function. The input is the =lm= object, which is =cars.lm=.
+We can calculate the standardized residuals with the \texttt{rstandard}
+function. The input is the \texttt{lm} object, which is \texttt{cars.lm}.
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 sres <- rstandard(cars.lm)
 sres[1:5]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :          1          2          3          4          5 
 :  0.2660415  0.8189327 -0.4013462  0.8132663  0.1421624
+\end{verbatim}
 
 We can find out which observations have studentized residuals larger
 than two with the command
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 sres[which(abs(sres) > 2)]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :       23       35       49 
 : 2.795166 2.027818 2.919060
+\end{verbatim}
 
 In this case, we see that observations 23, 35, and 49 are potential
 outliers with respect to their \(y\)-value.  We can compute the
-studentized deleted residuals with =rstudent=:
+studentized deleted residuals with \texttt{rstudent}:
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 sdelres <- rstudent(cars.lm)
 sdelres[1:5]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :          1          2          3          4          5 
 :  0.2634500  0.8160784 -0.3978115  0.8103526  0.1407033
+\end{verbatim}
 
 We should compare these values with critical values from a
 \(\mathsf{t}(\mathtt{df}=n-3)\) distribution, which in this case is
 \(\mathsf{t}(\mathtt{df}=50-3=47)\). We can calculate a 0.005 quantile
 and check with
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 t0.005 <- qt(0.005, df = 47, lower.tail = FALSE)
 sdelres[which(abs(sdelres) > t0.005)]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :       23       49 
 : 3.022829 3.184993
+\end{verbatim}
 
 This means that observations 23 and 49 have a large studentized
-deleted residual. The leverages can be found with the =hatvalues=
+deleted residual. The leverages can be found with the \texttt{hatvalues}
 function:
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 leverage <- hatvalues(cars.lm)
 leverage[which(leverage > 4/50)]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :          1          2         50 
 : 0.11486131 0.11486131 0.08727007
+\end{verbatim}
 
 Here we see that observations 1, 2, and 50 have leverages bigger than
 double their mean value. These observations would be considered
 outlying with respect to their \(x\) value (although they may or may
 not be influential).
 
-*** Influential Observations
+\subsection{Influential Observations}
+\label{sec-11-5-4}
 
-**** \(DFBETAS\) and \(DFFITS\)
+\subsubsection{\(DFBETAS\) and \(DFFITS\)}
+\label{sec-11-5-4-1}
 
 Any time we do a statistical analysis, we are confronted with the
 variability of data. It is always a concern when an observation plays
@@ -1637,21 +1491,21 @@ and the \(DFBETAS\) for the slope \(b_{1}\) are given by
 \begin{equation}
 (DFBETAS)_{1(i)}=\frac{b_{1}-b_{1(i)}}{S_{(i)}\left[\sum_{i=1}^{n}(x_{i}-\overline{x})^{2}\right]^{-1/2}},\quad i=1,2,\ldots,n.
 \end{equation}
-See Section [[#sec-Residual-Analysis-MLR]] for a better way to write these. The
+See Section \ref{sec-12-6} for a better way to write these. The
 signs of the \(DFBETAS\) indicate whether the coefficients would
 increase or decrease as a result of including the observation. If the
 \(DFBETAS\) are large, then the observation has a large impact on
 those regression coefficients. We label observations as suspicious if
 their \(DFBETAS\) have magnitude greater 1 for small data or
 \(2/\sqrt{n}\) for large data sets.  We can calculate the \(DFBETAS\)
-with the =dfbetas= function (some output has been omitted):
+with the \texttt{dfbetas} function (some output has been omitted):
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 dfb <- dfbetas(cars.lm)
 head(dfb)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :   (Intercept)       speed
 : 1  0.09440188 -0.08624563
 : 2  0.29242487 -0.26715961
@@ -1659,9 +1513,10 @@ head(dfb)
 : 4  0.21897614 -0.19085472
 : 5  0.03407516 -0.02901384
 : 6 -0.11100703  0.09174024
+\end{verbatim}
 
 We see that the inclusion of the first observation slightly increases
-the =Intercept= and slightly decreases the coefficient on =speed=.
+the \texttt{Intercept} and slightly decreases the coefficient on \texttt{speed}.
 
 We can measure the influence that an observation has on its fitted
 value with \(DFFITS\). These are calculated by deleting an
@@ -1673,27 +1528,29 @@ standardizing. The formula is
 The value represents the number of standard deviations of
 \(\hat{Y_{i}}\) that the fitted value \(\hat{Y_{i}}\) increases or
 decreases with the inclusion of the \(i^{\textrm{th}}\)
-observation. We can compute them with the =dffits= function.
+observation. We can compute them with the \texttt{dffits} function.
 
-#+BEGIN_SRC R :exports both :results output pp
+\begin{verbatim}
 dff <- dffits(cars.lm)
 dff[1:5]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :           1           2           3           4           5 
 :  0.09490289  0.29397684 -0.11039550  0.22487854  0.03553887
+\end{verbatim}
 
 A rule of thumb is to flag observations whose \(DFFIT\) exceeds one in
 absolute value, but there are none of those in this data set.
 
-**** Cook's Distance
+\subsubsection{Cook's Distance}
+\label{sec-11-5-4-2}
 
 The \(DFFITS\) are good for measuring the influence on a single fitted
 value, but we may want to measure the influence an observation has on
 all of the fitted values simultaneously. The statistics used for
 measuring this are Cook's distances which may be
-calculated[fn:fn-cook] by the formula
+calculatedby the formula
 \begin{equation}
 \label{eq-slr-cooks-distance}
 D_{i}=\frac{E_{i}^{2}}{(p+1)S^{2}}\cdot\frac{h_{ii}}{(1-h_{ii})^{2}},\quad i=1,2,\ldots,n.
@@ -1707,64 +1564,62 @@ To assess the significance of \(D\), we compare to quantiles of an
 of thumb is to classify observations falling higher than the
 \(50^{\mathrm{th}}\) percentile as being extreme.
 
-[fn:fn-cook] Cook's distances are actually defined by a different
-formula than the one shown. The formula in Equation
-\eqref{eq-slr-cooks-distance} is algebraically equivalent to the
-defining formula and is, in the author's opinion, more transparent.
+\subsubsection{How to do it with \(\mathsf{R}\)}
+\label{sec-11-5-4-3}
 
-**** How to do it with \(\mathsf{R}\)
-
-We can calculate the Cook's Distances with the =cooks.distance=
+We can calculate the Cook's Distances with the \texttt{cooks.distance}
 function.
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 cooksD <- cooks.distance(cars.lm)
 cooksD[1:4]
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 :           1           2           3           4 
 : 0.004592312 0.043513991 0.006202350 0.025467338
+\end{verbatim}
 
 We can look at a plot of the Cook's distances with the command
-=plot(cars.lm, which = 4)=.
+\texttt{plot(cars.lm, which = 4)}.
 
-#+NAME: Cooks-distance-cars
-#+BEGIN_SRC R :exports both :results graphics :file fig/slr-Cooks-distance-cars.ps
+\begin{verbatim}
 plot(cars.lm, which = 4)
-#+END_SRC
+\end{verbatim}
 
-#+NAME: fig-Cooks-distance-cars
-#+CAPTION[Cook's distances for the =cars= data]: \small Used for checking for influential and/our outlying observations. Values with large Cook's distance merit further investigation.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: Cooks-distance-cars
-[[file:fig/slr-Cooks-distance-cars.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-Cooks-distance-cars.ps}
+\caption[Cook's distances for the \texttt{cars} data]{\label{fig-Cooks-distance-cars}\small Used for checking for influential and/our outlying observations. Values with large Cook's distance merit further investigation.}
+\end{figure}
 
 Observations with the largest Cook's D values are labeled, hence we
 see that observations 23, 39, and 49 are suspicious. However, we need
 to compare to the quantiles of an \( \mathsf{f}(\mathtt{df1} = 2, \,
 \mathtt{df2} = 48) \) distribution:
 
-#+BEGIN_SRC R :exports both :results output pp 
+\begin{verbatim}
 F0.50 <- qf(0.5, df1 = 2, df2 = 48)
 any(cooksD > F0.50)
-#+END_SRC
+\end{verbatim}
 
-#+RESULTS:
+\begin{verbatim}
 : [1] FALSE
+\end{verbatim}
 
 We see that with this data set there are no observations with extreme
 Cook's distance, after all.
 
-*** All Influence Measures Simultaneously
+\subsection{All Influence Measures Simultaneously}
+\label{sec-11-5-5}
 
 We can display the result of diagnostic checking all at once in one
 table, with potentially influential points displayed. We do it with
-the command =influence.measures(cars.lm)=:
+the command \texttt{influence.measures(cars.lm)}:
 
-#+BEGIN_SRC R :exports code :eval never
+\begin{verbatim}
 influence.measures(cars.lm)
-#+END_SRC
+\end{verbatim}
 
 The output is a huge matrix display, which we have omitted in the
 interest of brevity. A point is identified if it is classified to be
@@ -1773,26 +1628,19 @@ see that observations 2, 11, 15, and 18 merit further investigation.
 
 We can also look at all diagnostic plots at once with the commands
 
-#+BEGIN_SRC R :exports code :eval never
+\begin{verbatim}
 plot(cars.lm)
-#+END_SRC
+\end{verbatim}
 
-The =par= command is used so that \(2\times 2 = 4\) plots will be
-shown on the same display. The diagnostic plots for the =cars= data
-are shown in Figure [[fig-Diagnostic-plots-cars]]:
+The \texttt{par} command is used so that \(2\times 2 = 4\) plots will be
+shown on the same display. The diagnostic plots for the \texttt{cars} data
+are shown in Figure \ref{fig-Diagnostic-plots-cars}:
 
-#+NAME: Diagnostic-plots-cars
-#+BEGIN_SRC R :exports results :results graphics :file fig/slr-Diagnostic-plots-cars.ps
-par(mfrow = c(2,2))
-plot(cars.lm)
-par(mfrow = c(1,1))
-#+END_SRC
-
-#+NAME: fig-Diagnostic-plots-cars
-#+CAPTION[Diagnostic plots for the =cars= data]: \small Diagnostic plots for the =cars= data.
-#+ATTR_LaTeX: :width 0.9\textwidth :placement [ht!]
-#+RESULTS: Diagnostic-plots-cars
-[[file:fig/slr-Diagnostic-plots-cars.ps]]
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/slr-Diagnostic-plots-cars.ps}
+\caption[Diagnostic plots for the \texttt{cars} data]{\label{fig-Diagnostic-plots-cars}\small Diagnostic plots for the \texttt{cars} data.}
+\end{figure}
 
 We have discussed all of the plots except the last, which is possibly
 the most interesting. It shows Residuals vs. Leverage, which will
@@ -1803,48 +1651,49 @@ low/moderate leverage (they are on the right side of the plot, just
 above the horizontal line). Observation 49 has a large residual with a
 comparatively large leverage.
 
-We can identify the observations with the =identify= command; it
+We can identify the observations with the \texttt{identify} command; it
 allows us to display the observation number of dots on the
-plot. First, we plot the graph, then we call =identify=:
+plot. First, we plot the graph, then we call \texttt{identify}:
 
-#+BEGIN_SRC R :exports code :eval never
+\begin{verbatim}
 plot(cars.lm, which = 5)          # std'd resids vs lev plot
 identify(leverage, sres, n = 4)   # identify 4 points
-#+END_SRC
+\end{verbatim}
 
 The graph with the identified points is omitted (but the plain plot is
 shown in the bottom right corner of Figure
-[[fig-Diagnostic-plots-cars]]). Observations 1 and 2 fall on the far right
+\ref{fig-Diagnostic-plots-cars}). Observations 1 and 2 fall on the far right
 side of the plot, near the horizontal axis.
 
-#+LaTeX: \newpage{}
+\newpage{}
 
-** Exercises
-#+LaTeX: \setcounter{thm}{0}
+\section{Exercises}
+\label{sec-11-6}
+\setcounter{thm}{0}
 
-#+BEGIN_xca
-Prove the ANOVA equality, Equation \eqref{eq-anovaeq}. /Hint/:
+\begin{xca}
+Prove the ANOVA equality, Equation \eqref{eq-anovaeq}. \emph{Hint}:
 show that
 \[
 \sum_{i=1}^{n}(Y_{i}-\hat{Y_{i}})(\hat{Y_{i}}-\overline{Y})=0.
 \]
-#+END_xca
+\end{xca}
 
-#+BEGIN_xca
-<<xca-find-mles-SLR>> Solve the following system of equations for
+\begin{xca}
+\label{xca-find-mles-SLR} Solve the following system of equations for
 \(\beta_{1}\) and \(\beta_{0}\) to find the MLEs for slope and
 intercept in the simple linear regression model.
 \begin{eqnarray*}
 n\beta_{0}+\beta_{1}\sum_{i=1}^{n}x_{i} & = & \sum_{i=1}^{n}y_{i}\\
 \beta_{0}\sum_{i=1}^{n}x_{i}+\beta_{1}\sum_{i=1}^{n}x_{i}^{2} & = & \sum_{i=1}^{n}x_{i}y_{i}
 \end{eqnarray*}
-#+END_xca
+\end{xca}
 
-#+BEGIN_xca
-<<xca-show-alternate-slope-formula>> Show that the formula given in
+\begin{xca}
+\label{xca-show-alternate-slope-formula} Show that the formula given in
 Equation \eqref{eq-sample-correlation-formula} is equivalent to \[
 \hat{\beta}_{1} =
 \frac{\sum_{i=1}^{n}x_{i}y_{i}-\left.\left(\sum_{i=1}^{n}x_{i}\right)\left(\sum_{i=1}^{n}y_{i}\right)\right/
 n}{\sum_{i=1}^{n}x_{i}^{2}-\left.\left(\sum_{i=1}^{n}x_{i}\right)^{2}\right/
 n}.  \]
-#+END_xca
+\end{xca}
