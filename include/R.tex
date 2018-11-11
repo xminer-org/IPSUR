@@ -1,24 +1,12 @@
 \chapter{An Introduction to R}
 \label{sec-2}
 
-Every \(\mathsf{R}\) book I have ever seen has had a section/chapter
-that is an introduction to \(\mathsf{R}\), and so does this one.  The
-goal of this chapter is for a person to get up and running, ready for
-the material that follows.  See Section \ref{sec-2-5} for links
-to other material which the reader may find useful.
-
-\textbf{What do I want them to know?}
+\textbf{Highlights:}
 \begin{itemize}
-\item Where to find \(\mathsf{R}\) to install on a home computer, and a
-few comments to help with the usual hiccups that occur when
-installing something.
-\item Abbreviated remarks about the available options to interact with
-\(\mathsf{R}\).
+\item Where to find \(\mathsf{R}\) to install on a computer.
 \item Basic operations (arithmetic, entering data, vectors) at the command
 prompt.
 \item How and where to find help when they get in trouble.
-\item Other little shortcuts I am usually asked when introducing
-\(\mathsf{R}\).
 \end{itemize}
 
 \section{Downloading and Installing \(\mathsf{R}\)}
@@ -26,7 +14,7 @@ prompt.
 
 The instructions for obtaining \(\mathsf{R}\) largely depend on the
 user's hardware and operating system. The \(\mathsf{R}\) Project has
-written an \(\mathsf{R}\) Installation and Administration manual with
+written \href{http://cran.r-project.org/manuals.html}{The \(\mathsf{R}\) Manual} with
 complete, precise instructions about what to do, together with all
 sorts of additional information. The following is just a primer to get
 a person started.
@@ -43,39 +31,9 @@ for your operating system:
 \item[{Linux:}] \url{http://cran.r-project.org/bin/linux/}
 \end{description}
 
-On Microsoft Windows, click the \texttt{R-x.y.z.exe} installer to start
-installation. When it asks for "Customized startup options", specify
-\texttt{Yes}. In the next window, be sure to select the SDI (single document
-interface) option; this is useful later when we discuss three
-dimensional plots with the \texttt{rgl} package \cite{rgl}.
-
-\subsubsection{Installing \(\mathsf{R}\) on a USB drive (Windows)}
-\label{sec-2-1-1-1}
-
-With this option you can use \(\mathsf{R}\) portably and without
-administrative privileges. There is an entry in the \(\mathsf{R}\) for
-Windows FAQ about this. Here is the procedure I use:
-\begin{enumerate}
-\item Download the Windows installer above and start installation as
-usual. When it asks \emph{where} to install, navigate to the top-level
-directory of the USB drive instead of the default \texttt{C} drive.
-\item When it asks whether to modify the Windows registry, uncheck the
-box; we do NOT want to tamper with the registry.
-\item After installation, change the name of the folder from \texttt{R-x.y.z} to
-just plain \(\mathsf{R}\). (Even quicker: do this in step 1.)
-\item \href{http://ipsur.r-forge.r-project.org/book/download/R.exe}{Download this shortcut} and move it to the top-level directory of
-the USB drive, right beside the \(\mathsf{R}\) folder, not inside
-the folder. Use the downloaded shortcut to run \(\mathsf{R}\).
-\end{enumerate}
-
-Steps 3 and 4 are not required but save you the trouble of navigating
-to the \texttt{R-x.y.z/bin} directory to double-click \texttt{Rgui.exe} every time
-you want to run the program. It is useless to create your own shortcut
-to \texttt{Rgui.exe}. Windows does not allow shortcuts to have relative
-paths; they always have a drive letter associated with them. So if you
-make your own shortcut and plug your USB drive into some \emph{other}
-machine that happens to assign your drive a different letter, then
-your shortcut will no longer be pointing to the right place.
+A great tool for working with R is RStudio, which is convenient, popular, and free.
+Please read \url{https://en.wikipedia.org/wiki/RStudio}.
+You can download and install RStudio from its official website \url{https://www.rstudio.com}.
 
 \subsection{Installing and Loading Add-on Packages}
 \label{sec-2-1-2}
@@ -85,9 +43,9 @@ automatically), and \emph{contributed} packages (which must be downloaded
 for installation). For example, on the version of \(\mathsf{R}\) being
 used for this document the default base packages loaded at startup are
 
-\begin{verbatim}
+\begin{Verbatim}
 getOption("defaultPackages")
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] "datasets"  "utils"     "grDevices" "graphics"  "stats"     "methods"
@@ -108,10 +66,6 @@ install \texttt{foo} and additionally install all of the other packages on
 which \texttt{foo} depends, instead type \texttt{install.packages("foo", depends =
 TRUE)}.
 
-The general command \texttt{install.packages()} will (on most operating
-systems) open a window containing a huge list of available packages;
-simply choose one or more to install.
-
 No matter how many packages are installed onto the system, each one
 must first be loaded for use with the
 \texttt{library} \index{library@\texttt{library}} function. For instance, the
@@ -120,150 +74,8 @@ needed to import data sets into \(\mathsf{R}\) from other software
 such as SPSS, SAS, \emph{etc}. But none of those functions will be
 available until the command \texttt{library("foreign")} is issued.
 
-Type \texttt{library()} at the command prompt (described below) to see a list
+Type \texttt{library()} at the command prompt to see a list
 of all available packages in your library.
-
-For complete, precise information regarding installation of
-\(\mathsf{R}\) and add-on packages, see the \href{http://cran.r-project.org/manuals.html}{R Installation and Administration manual}.
-
-\section{Communicating with \(\mathsf{R}\)}
-\label{sec-2-2}
-
-\subsection{One line at a time}
-\label{sec-2-2-1}
-
-This is the most basic method and is the first one that beginners will use.
-\begin{itemize}
-\item RGui (Microsoft \(\circledR\) Windows)
-\item Terminal
-\item Emacs/ESS, XEmacs
-\item JGR
-\end{itemize}
-
-\subsection{Multiple lines at a time}
-\label{sec-2-2-2}
-
-For longer programs (called \emph{scripts}) there is too much code to write
-all at once at the command prompt. Furthermore, for longer scripts it
-is convenient to be able to only modify a certain piece of the script
-and run it again in \(\mathsf{R}\). Programs called \emph{script editors}
-are specially designed to aid the communication and code writing
-process. They have all sorts of helpful features including
-\(\mathsf{R}\) syntax highlighting, automatic code completion,
-delimiter matching, and dynamic help on the \(\mathsf{R}\) functions
-as they are being written. Even more, they often have all of the text
-editing features of programs like Microsoft\(\circledR\)Word. Lastly,
-most script editors are fully customizable in the sense that the user
-can customize the appearance of the interface to choose what colors to
-display, when to display them, and how to display them.
-
-\begin{description}
-\item[{\(\mathsf{R}\) Editor (Windows):}] \index{R
-     Editor@\textsf{R} Editor} In Microsoft\(\circledR\) Windows,
-\(\mathsf{R}\) Gui has its own built-in script editor, called
-\(\mathsf{R}\) Editor. From the console window, select \texttt{File}
-\(\triangleright\) \texttt{New Script}. A script window opens, and the
-lines of code can be written in the window. When satisfied with
-the code, the user highlights all of the commands and presses
-\textsf{Ctrl+R}. The commands are automatically run at once in
-\(\mathsf{R}\) and the output is shown. To save the script for
-later, click \texttt{File} \(\triangleright\) \texttt{Save as...} in
-\(\mathsf{R}\) Editor. The script can be reopened later with
-\texttt{File} \(\triangleright\)\} \texttt{Open Script...} in \texttt{RGui}. Note that
-\(\mathsf{R}\) Editor does not have the fancy syntax highlighting
-that the others do.
-\item[{\(\mathsf{R}\) WinEdt:}] \index{RWinEdt@\textsf{R}WinEdt}
-This option is coordinated with WinEdt for \LaTeX{} and has
-additional features such as code highlighting, remote sourcing,
-and a ton of other things. However, one first needs to download
-and install a shareware version of another program, WinEdt, which
-is only free for a while -- pop-up windows will eventually appear
-that ask for a registration code. \(\mathsf{R}\) WinEdt is
-nevertheless a very fine choice if you already own WinEdt or are
-planning to purchase it in the near future.
-\item[{Tinn \(\mathsf{R}\) / Sciviews K:}] \index{Tinn R@Tinn
-     \textsf{R}}\index{Sciviews K} This one is completely free and
-has all of the above mentioned options and more. It is simple
-enough to use that the user can virtually begin working with it
-immediately after installation. But Tinn \(\mathsf{R}\) proper is
-only available for Microsoft\(\circledR\) Windows operating
-systems. If you are on MacOS or Linux, a comparable alternative
-is Sci-Views - Komodo Edit.
-\item[{Emacs/ESS:}] \index{Emacs}\index{ESS} Emacs is an all
-purpose text editor. It can do absolutely anything
-with respect to modifying, searching, editing, and
-manipulating, text. And if Emacs can't do it, then you
-can write a program that extends Emacs to do it. Once
-such extension is called \texttt{ESS}, which stands for
-\emph{E}-macs \emph{S}-peaks \emph{S}-tatistics. With ESS a person
-can speak to \(\mathsf{R}\), do all of the tricks that
-the other script editors offer, and much, much,
-more. Please see the following for installation
-details, documentation, reference cards, and a whole
-lot more: \url{http://ess.r-project.org}.  \emph{Fair warning}:
-if you want to try Emacs and if you grew up with
-Microsoft\(\circledR\) Windows or Macintosh, then you
-are going to need to relearn everything you thought
-you knew about computers your whole life. (Or, since
-Emacs is completely customizable, you can reconfigure
-Emacs to behave the way you want.) I have personally
-experienced this transformation and I will never go
-back.
-\item[{JGR (read "Jaguar"):}] \index{JGR} This one has the bells
-and whistles of \texttt{RGui} plus it is based on Java, so it works on
-multiple operating systems. It has its own script editor like
-\(\mathsf{R}\) Editor but with additional features such as syntax
-highlighting and code-completion. If you do not use
-Microsoft\(\circledR\) Windows (or even if you do) you definitely
-want to check out this one.
-\item[{Kate, Bluefish, \emph{etc}}] There are literally dozens of other text
-editors available, many of them free, and each has its own
-(dis)advantages. I only have mentioned the ones with which I have
-had substantial personal experience and have enjoyed at some
-point. Play around, and let me know what you find.
-\end{description}
-
-\subsection{Graphical User Interfaces (GUIs)}
-\label{sec-2-2-3}
-
-By the word "GUI" I mean an interface in which the user communicates
-with \(\mathsf{R}\) by way of points-and-clicks in a menu of some
-sort. Again, there are many, many options and I only mention ones that
-I have used and enjoyed. Some of the other more popular script editors
-can be downloaded from the \(\mathsf{R}\)-Project website at
-\url{http://www.sciviews.org/_rgui/}. On the left side of the screen
-(under \textbf{Projects}) there are several choices available.
-
-\begin{description}
-\item[{\(\mathsf{R}\) Commander}] provides a point-and-click interface to
-many basic statistical tasks. It is called the "Commander"
-because every time one makes a selection from the menus, the code
-corresponding to the task is listed in the output window. One can
-take this code, copy-and-paste it to a text file, then re-run it
-again at a later time without the \(\mathsf{R}\) Commander's
-assistance. It is well suited for the introductory level. \texttt{Rcmdr}
-\cite{Rcmdr} also allows for user-contributed "Plugins" which are
-separate packages on \texttt{CRAN} that add extra functionality to the
-\texttt{Rcmdr} package. The plugins are typically named with the prefix
-\texttt{RcmdrPlugin} to make them easy to identify in the \texttt{CRAN} package
-list. One such plugin is the \texttt{RcmdrPlugin.IPSUR} package
-\cite{RcmdrPlugin.IPSUR} which accompanies this text.
-\item[{Poor Man's GUI}] \index{Poor Man's GUI} is an alternative
-to the \texttt{Rcmdr} which is based on GTk instead of
-Tcl/Tk. It has been a while since I used it but I
-remember liking it very much when I did. One thing
-that stood out was that the user could
-drag-and-drop data sets for plots. See here for
-more information:
-\url{http://wiener.math.csi.cuny.edu/pmg/}.
-\item[{Rattle}] \index{Rattle} is a data mining toolkit which
-was designed to manage/analyze very large data sets, but
-it provides enough other general functionality to merit
-mention here. See \cite{rattle} for more information.
-\item[{Deducer}] \index{Deducer} is relatively new and shows
-promise from what I have seen, but I have not actually
-used it in the classroom yet.
-\end{description}
 
 \section{Basic \(\mathsf{R}\) Operations and Concepts}
 \label{sec-2-3}
@@ -275,19 +87,16 @@ session included which shows what basic interaction with
 \(\mathsf{R}\) read that document, but bear in mind that there are
 concepts mentioned which will be unfamiliar to the beginner.
 
-Below are some of the most basic operations that can be done with
-\(\mathsf{R}\). Almost every book about \(\mathsf{R}\) begins with a
-section like the one below; look around to see all sorts of things
-that can be done at this most basic level.
+Please read: \url{https://cran.r-project.org/manuals.html}
 
 \subsection{Arithmetic}
 \label{sec-2-3-1}
 
-\begin{verbatim}
+\begin{Verbatim}
 2 + 3       # add
 4 * 5 / 6   # multiply and divide
 7^8         # 7 to the 8th power
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 5
@@ -301,14 +110,14 @@ is a repeating decimal, but the above example shows only 7 digits. We
 can change the number of digits displayed with
 \texttt{options} \index{options@\texttt{options}}:
 
-\begin{verbatim}
+\begin{Verbatim}
 options(digits = 16)
 10/3                 # see more digits
 sqrt(2)              # square root
 exp(1)               # Euler's constant, e
 pi       
 options(digits = 7)  # back to default
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 3.333333333333333
@@ -324,6 +133,7 @@ necessarily reliable). Above notice the \texttt{sqrt}
 \index{sqrt@\texttt{sqrt}} function for square roots and the
 \texttt{exp} \index{exp@\texttt{exp}} function for powers of
 \(\mathrm{e}\), Euler's number.
+Also notice the number $pi$, a mathematical constant, which is often represented by the Greek letter $\pi$.
 
 \subsection{Assignment, Object names, and Data types}
 \label{sec-2-3-2}
@@ -337,10 +147,10 @@ masters to reserve \verb~=~ for specifying arguments to functions
 \texttt{<-} for assignment. Once a variable is assigned, its value can be
 printed by simply entering the variable name by itself.
 
-\begin{verbatim}
+\begin{Verbatim}
 x <- 7*41/pi   # don't see the calculated value
 x              # take a look
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 91.35494
@@ -350,22 +160,16 @@ When choosing a variable name you can use letters, numbers, dots
 "\texttt{.}", or underscore "\texttt{\_}" characters. You cannot
 use mathematical operators, and a leading dot may not be followed by a
 number. Examples of valid names are: \texttt{x}, \texttt{x1}, \texttt{y.value}, and
-\texttt{!y\_hat}. (More precisely, the set of allowable characters in object
-names depends on one's particular system and locale; see An
-Introduction to \(\mathsf{R}\) for more discussion on this.)
+\texttt{y\_hat}.
 
 Objects can be of many \emph{types}, \emph{modes}, and \emph{classes}. At this level,
 it is not necessary to investigate all of the intricacies of the
 respective types, but there are some with which you need to become
 familiar:
 \begin{description}
-\item[{integer:}] the values \(0\), \(\pm1\), \(\pm2\), \ldots{}; these are
-represented exactly by \(\mathsf{R}\).
-\item[{double:}] real numbers (rational and irrational); these numbers are
-not represented exactly (save integers or fractions with
-a denominator that is a power of 2, see
-\cite{Venables2010}).
-\item[{character:}] elements that are wrapped with pairs of ="= or ';
+\item[{integer:}] the values \(0\), \(\pm1\), \(\pm2\), \ldots{};
+\item[{double:}] real numbers (rational and irrational);
+\item[{character:}] elements that are wrapped with pairs of quotes;
 \item[{logical:}] includes \texttt{TRUE}, \texttt{FALSE}, and \texttt{NA} (which are reserved
 words); the \texttt{NA} \index{NA@\texttt{NA}} stands
 for "not available", \emph{i.e.}, a missing value.
@@ -376,13 +180,13 @@ You can determine an object's type with the \texttt{typeof}
 there is the \texttt{complex} \index{complex@\texttt{complex}}
 \index{as.complex@\texttt{as.complex}} data type:
 
-\begin{verbatim}
+\begin{Verbatim}
 sqrt(-1)              # isn't defined
 sqrt(-1+0i)           # is defined
 sqrt(as.complex(-1))  # same thing
 (0 + 1i)^2            # should be -1
 typeof((0 + 1i)^2)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] NaN
@@ -410,10 +214,10 @@ data \texttt{74,31,95,61,76,34,23,54,96} into \(\mathsf{R}\), you may create
 a data vector with the \texttt{c} function (which is short for
 \emph{concatenate}).
 
-\begin{verbatim}
+\begin{Verbatim}
 x <- c(74, 31, 95, 61, 76, 34, 23, 54, 96)
 x
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 74 31 95 61 76 34 23 54 96
@@ -423,7 +227,9 @@ The elements of a vector are usually coerced by \(\mathsf{R}\) to the
 the most general type of any of the elements, so if you do \texttt{c(1, "2")}
 then the result will be \texttt{c("1", "2")}.
 
-\textbf{A shorter way:} \index{scan@\texttt{scan}}: The \texttt{scan} method is
+\index{scan@\texttt{scan}}
+\textbf{A shorter way:}
+The \texttt{scan} method is
 useful when the data are stored somewhere else. For instance, you may
 type \texttt{x <- scan()} at the command prompt and \(\mathsf{R}\) will
 display \texttt{1:} to indicate that it is waiting for the first data
@@ -440,10 +246,10 @@ arguments \texttt{from}, \texttt{to}, \texttt{by}, and \texttt{length.out} which
 concert with one another. We will do a couple of examples to show you
 how it works.
 
-\begin{verbatim}
+\begin{Verbatim}
 seq(from = 1, to = 5)
 seq(from = 2, by = -0.1, length.out = 4)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 1 2 3 4 5
@@ -453,9 +259,9 @@ seq(from = 2, by = -0.1, length.out = 4)
 Note that we can get the first line much quicker with the colon
 operator.
 
-\begin{verbatim}
+\begin{Verbatim}
 1:5
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 1 2 3 4 5
@@ -473,12 +279,12 @@ Sometimes we do not want the whole vector, but just a piece of it. We
 can access the intermediate parts with the \texttt{[]} operator. Observe
 (with \texttt{x} defined above)
 
-\begin{verbatim}
+\begin{Verbatim}
 x[1]
 x[2:4]
 x[c(1,3,4,8)]
 x[-c(1,3,4,8)]
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 74
@@ -490,10 +296,10 @@ x[-c(1,3,4,8)]
 Notice that we used the minus sign to specify those elements that we
 do \emph{not} want.
 
-\begin{verbatim}
+\begin{Verbatim}
 LETTERS[1:5]
 letters[-(6:24)]
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] "A" "B" "C" "D" "E"
@@ -507,14 +313,14 @@ A function takes arguments as input and returns an object as
 output. There are functions to do all sorts of things. We show some
 examples below.
 
-\begin{verbatim}
+\begin{Verbatim}
 x <- 1:5
 sum(x)
 length(x)
 min(x)
 mean(x)      # sample mean
 sd(x)        # sample standard deviation
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 15
@@ -524,287 +330,50 @@ sd(x)        # sample standard deviation
 : [1] 1.581139
 \end{verbatim}
 
-It will not be long before the user starts to wonder how a particular
-function is doing its job, and since \(\mathsf{R}\) is open-source,
-anybody is free to look under the hood of a function to see how things
-are calculated. For detailed instructions see the article "Accessing
-the Sources" by Uwe Ligges \cite{Ligges2006}. In short:
-
-\textbf{Type the name of the function} without any parentheses or
-arguments. If you are lucky then the code for the entire function will
-be printed, right there looking at you. For instance, suppose that we
-would like to see how the \texttt{intersect}
-\index{intersect@\texttt{intersect}} function works:
-
-\begin{verbatim}
-intersect
-\end{verbatim}
-
-\begin{verbatim}
-function (x, y) 
-{
-    y <- as.vector(y)
-    unique(y[match(as.vector(x), y, 0L)])
-}
-<environment: namespace:base>
-\end{verbatim}
-
-\textbf{If instead} it shows \texttt{UseMethod(something)}
-\index{UseMethod@\texttt{UseMethod}} then you will need to choose the
-\emph{class} of the object to be inputted and next look at the \emph{method}
-that will be \emph{dispatched} to the object. For instance, typing \texttt{rev}
-\index{rev@\texttt{rev}} says
-
-\begin{verbatim}
-rev
-\end{verbatim}
-
-\begin{verbatim}
-: function (x) 
-: UseMethod("rev")
-: <environment: namespace:base>
-\end{verbatim}
-
-The output is telling us that there are multiple methods associated
-with the \texttt{rev} function. To see what these are, type
-
-\begin{verbatim}
-methods(rev)
-\end{verbatim}
-
-\begin{verbatim}
-: [1] rev.default     rev.dendrogram* rev.likert*     rev.zoo         rev.zooreg*    
-: 
-:    Non-visible functions are asterisked
-\end{verbatim}
-
-Now we learn that there are two different \texttt{rev(x)} functions, only one
-of which being chosen at each call depending on what \texttt{x} is. There is
-one for \texttt{dendrogram} objects and a \texttt{default} method for everything
-else. Simply type the name to see what each method does. For example,
-the \texttt{default} method can be viewed with
-
-\begin{verbatim}
-rev.default
-\end{verbatim}
-
-\begin{verbatim}
-: function (x) 
-: if (length(x)) x[length(x):1L] else x
-: <environment: namespace:base>
-\end{verbatim}
-
-\textbf{Some functions are hidden} by a \emph{namespace} (see An Introduction to
-\(\mathsf{R}\) \cite{Venables2010}), and are not visible on the first
-try. For example, if we try to look at the code for \texttt{wilcox.test}
-\index{wilcox.test@\texttt{wilcox.test}} (see Chapter \ref{sec-14}) we get the following:
-
-\begin{verbatim}
-wilcox.test
-methods(wilcox.test)
-\end{verbatim}
-
-\begin{verbatim}
-: function (x, ...) 
-: UseMethod("wilcox.test")
-: <environment: namespace:stats>
-: [1] wilcox.test.default* wilcox.test.formula*
-: 
-:    Non-visible functions are asterisked
-\end{verbatim}
-
-If we were to try \texttt{wilcox.test.default} we would get a "not found"
-error, because it is hidden behind the namespace for the package
-\texttt{stats} \cite{stats} (shown in the last line when we tried
-\texttt{wilcox.test}). In cases like these we prefix the package name to the
-front of the function name with three colons; the command
-\texttt{stats:::wilcox.test.default} will show the source code, omitted here
-for brevity.
-
-\textbf{If it shows} \texttt{.Internal(something)}
-\index{.Internal@\texttt{.Internal}} or \texttt{.Primitive(something)}
-\index{.Primitive@\texttt{.Primitive}}, then it will be necessary to
-download the source code of \(\mathsf{R}\) (which is \emph{not} a binary
-version with an \texttt{.exe} extension) and search inside the code
-there. See Ligges \cite{Ligges2006} for more discussion on this. An
-example is \texttt{exp}:
-
-\begin{verbatim}
-exp
-\end{verbatim}
-
-\begin{verbatim}
-: function (x)  .Primitive("exp")
-\end{verbatim}
-
-Be warned that most of the \texttt{.Internal} functions are written in other
-computer languages which the beginner may not understand, at least
-initially.
-
 \section{Getting Help}
 \label{sec-2-4}
 
 When you are using \(\mathsf{R}\), it will not take long before you
 find yourself needing help. Fortunately, \(\mathsf{R}\) has extensive
 help resources and you should immediately become familiar with
-them. Begin by clicking \texttt{Help} on \texttt{RGui}. The following options are
-available.
-\begin{description}
-\item[{Console:}] gives useful shortcuts, for instance, \texttt{Ctrl+L}, to clear
-the \(\mathsf{R}\) console screen.
-\item[{FAQ on \(\mathsf{R}\):}] frequently asked questions concerning
-general \(\mathsf{R}\) operation.
-\item[{FAQ on \(\mathsf{R}\) for Windows:}] frequently asked questions
-about \(\mathsf{R}\), tailored to the Microsoft Windows operating
-system.
-\item[{Manuals:}] technical manuals about all features of the
-\(\mathsf{R}\) system including installation, the
-complete language definition, and add-on packages.
-\item[{\(\mathsf{R}\) functions (text)\ldots{}:}] use this if you know the
+them.
+Begin by clicking \texttt{Help} on \texttt{RStudio}.
+
+\index{help.start@\texttt{help.start}}
+If you want to browse the manuals with point-and-click links, the best method for beginners can be started with \texttt{help.start()} from the command line.
+
+\index{help@\texttt{help}}
+If you know the
 \emph{exact} name of the function you want to know more about, for
-example, \texttt{mean} or \texttt{plot}. Typing \texttt{mean} in the window is
-equivalent to typing \texttt{help("mean")}
-\index{help@\texttt{help}} at the command line, or more
-simply, \texttt{?mean} \index{?@\texttt{?}}. Note that this
-method only works if the function of interest is contained in a
-package that is already loaded into the search path with
-\texttt{library}.
-\item[{HTML Help:}] use this to browse the manuals with point-and-click
-links. It also has a Search Engine \& Keywords for
-searching the help page titles, with point-and-click
-links for the search results. This is possibly the
-best help method for beginners. It can be started from
-the command line with the command
-\texttt{help.start()} \index{help.start@\texttt{help.start}}.
-\item[{Search help \ldots{}:}] use this if you do not know the exact name of
+example, \texttt{mean} or \texttt{plot}, you can type \texttt{help("mean")} or more simply \texttt{?mean} \index{?@\texttt{?}} at the command line.
+
+\index{??@\texttt{??}}
+If you do not know the exact name of
 the function of interest, or if the function is in a package that
-has not been loaded yet. For example, you may enter \texttt{plo} and a
-text window will return listing all the help files with an alias,
-concept, or title matching `=plo=' using regular expression
-matching; it is equivalent to typing
-\texttt{help.search("plo")} \index{help.search@\texttt{help.search}} at
-the command line. The advantage is that you do not need to know
-the exact name of the function; the disadvantage is that you
-cannot point-and-click the results. Therefore, one may wish to
-use the HTML Help search engine instead. An equivalent way is
-\texttt{??plo} \index{??@\texttt{??}} at the command line.
-\item[{search.r-project.org \ldots{}:}] this will search for words in help
-lists and email archives of the \(\mathsf{R}\) Project. It can be
-very useful for finding other questions that other users have
-asked.
-\item[{Apropos \ldots{}:}] use this for more sophisticated partial name
-matching of functions. See \texttt{?apropos}
-\index{apropos@\texttt{apropos}} for details.
-\end{description}
+has not been loaded yet, you can try \texttt{help.search("plo")} \index{help.search@\texttt{help.search}} or equivalently \texttt{??plo} at the command line.
 
 On the help pages for a function there are sometimes "Examples"
 listed at the bottom of the page, which will work if copy-pasted at
 the command line (unless marked otherwise). The \texttt{example}
 \index{example@\texttt{example}} function will run the code
 automatically, skipping the intermediate step. For instance, we may
-try \texttt{example(mean)} to see a few examples of how the \texttt{mean} function
+try \texttt{example(plot)} to see a few examples of how the \texttt{plot} function
 works.
 
-\subsection{\(\mathsf{R}\) Help Mailing Lists}
-\label{sec-2-4-1}
-
-There are several mailing lists associated with \(\mathsf{R}\), and
-there is a huge community of people that read and answer questions
-related to \(\mathsf{R}\). See \href{http://www.r-project.org/mail.html}{here} for an idea of what is
-available. Particularly pay attention to the bottom of the page which
-lists several special interest groups (SIGs) related to
+In addition, there is a mountain of information and examples on the Internet about
 \(\mathsf{R}\).
-
-Bear in mind that \(\mathsf{R}\) is free software, which means that it
-was written by volunteers, and the people that frequent the mailing
-lists are also volunteers who are not paid by customer support
-fees. Consequently, if you want to use the mailing lists for free
-advice then you must adhere to some basic etiquette, or else you may
-not get a reply, or even worse, you may receive a reply which is a bit
-less cordial than you are used to. Below are a few considerations:
-\begin{enumerate}
-\item Read the \href{http://cran.r-project.org/faqs.html}{FAQ}. Note that there are different FAQs for different
-operating systems. You should read these now, even without a
-question at the moment, to learn a lot about the idiosyncrasies of
-\(\mathsf{R}\).
-\item Search the archives. Even if your question is not a FAQ, there is a
-very high likelihood that your question has been asked before on
-the mailing list. If you want to know about topic \texttt{foo}, then you
-can do \texttt{RSiteSearch("foo")}
-\index{RSiteSearch@\texttt{RSiteSearch}} to search the
-mailing list archives (and the online help) for it.
-\item Do a Google search and an \texttt{RSeek.org} search.
-\end{enumerate}
-
-If your question is not a FAQ, has not been asked on
-\(\mathsf{R}\)-help before, and does not yield to a Google (or
-alternative) search, then, and only then, should you even consider
-writing to \(\mathsf{R}\)-help. Below are a few additional
-considerations.
-
-\begin{itemize}
-\item Read the \href{http://www.r-project.org/posting-guide.html}{posting guide} before posting. This will save you a lot of
-trouble and pain.
-\item Get rid of the command prompts (\texttt{>}) from output. Readers of your
-message will take the text from your mail and copy-paste into an
-\(\mathsf{R}\) session. If you make the readers' job easier then it
-will increase the likelihood of a response.
-\item Questions are often related to a specific data set, and the best way
-to communicate the data is with a \texttt{dump} \index{dump@\texttt{dump}}
-command. For instance, if your question involves data stored in a
-vector \texttt{x}, you can type \texttt{dump("x","")} at the command prompt and
-copy-paste the output into the body of your email message. Then the
-reader may easily copy-paste the message from your email into
-\(\mathsf{R}\) and \texttt{x} will be available to him/her.
-\item Sometimes the answer the question is related to the operating system
-used, the attached packages, or the exact version of \(\mathsf{R}\)
-being used. The \texttt{sessionInfo()}
-\index{sessionInfo@\texttt{sessionInfo}} command collects
-all of this information to be copy-pasted into an email (and the
-Posting Guide requests this information). See Appendix
-\ref{sec-17} for an example.
-\end{itemize}
-
-\section{External Resources}
-\label{sec-2-5}
-
-There is a mountain of information on the Internet about
-\(\mathsf{R}\). Below are a few of the important ones.
-\begin{itemize}
-\item The \(\mathsf{R}\)- Project for Statistical Computing \index{The
-  R-Project@The \textsf{R}-Project}: Go \href{http://www.r-project.org/}{there} first.
-\item The Comprehensive \(\mathsf{R}\) Archive Network
-\index{CRAN}: \href{http://cran.r-project.org/}{That is
-where} \(\mathsf{R}\) is stored along with thousands of contributed
-packages. There are also loads of contributed information (books,
-tutorials, \emph{etc}.). There are mirrors all over the world with
-duplicate information.
-\item \(\mathsf{R}\)-Forge \index{R-Forge@\textsf{R}-Forge}: \href{http://r-forge.r-project.org/}{This is
-another location} where \(\mathsf{R}\) packages are stored. Here you
-can find development code which has not yet been released to \texttt{CRAN}.
-\item \(\mathsf{R}\)-Wiki \index{R-Wiki@\textsf{R}-Wiki}: There are many
-tips, tricks, and general advice \href{http://wiki.r-project.org/rwiki/doku.php}{listed here}. If you find a trick of
-your own, login and share it with the world.
-\item Other: the \href{http://addictedtor.free.fr/graphiques/}{\(\mathsf{R}\) Graph Gallery} \index{R Graph
-  Gallery@\textsf{R} Graph Gallery} and \href{http://bm2.genes.nig.ac.jp/RGM2/index.php}{\(\mathsf{R}\) Graphical
-Manual} \index{R Graphical Manual@\textsf{R} Graphical Manual} have
-literally thousands of graphs to peruse. \href{http://www.rseek.org}{\(\mathsf{R}\) Seek} is a
-search engine based on Google specifically tailored for
-\(\mathsf{R}\) queries.
-\end{itemize}
 
 \section{Other Tips}
 \label{sec-2-6}
 
+\begin{itemize}
+\item
 It is unnecessary to retype commands repeatedly, since \(\mathsf{R}\)
-remembers what you have recently entered on the command line. On the
-Microsoft\(\circledR\) Windows \(\mathsf{R}\) Gui, to cycle through
-the previous commands just push the \(\uparrow\) (up arrow) key. On
-Emacs/ESS the command is \texttt{M-p} (which means hold down the \texttt{Alt} button
-and press "p"). More generally, the command \texttt{history()}
+remembers what you have recently entered on the command line.
+To cycle through the previous commands just push the \(\uparrow\) (up arrow) key.
+More generally, the command \texttt{history()}
 \index{history@\texttt{history}} will show a whole list of recently
 entered commands.
-\begin{itemize}
 \item To find out what all variables are in the current work environment,
 use the commands \texttt{objects()} \index{objects@\texttt{objects}} or
 \texttt{ls()} \index{ls@\texttt{ls}}. These list all available objects in
@@ -812,26 +381,10 @@ the workspace. If you wish to remove one or more variables, use
 \texttt{remove(var1, var2, var3)} \index{remove@\texttt{remove}}, or more
 simply use \texttt{rm(var1, var2, var3)}, and to remove all objects use
 \texttt{rm(list = ls())}.
-\item Another use of \texttt{scan} is when you have a long list of numbers
-(separated by spaces or on different lines) already typed somewhere
-else, say in a text file To enter all the data in one fell swoop,
-first highlight and copy the list of numbers to the Clipboard with
-\texttt{Edit} \(\triangleright\) \texttt{Copy} (or by right-clicking and selecting
-\texttt{Copy}). Next type the \texttt{x <- scan()} command in the \(\mathsf{R}\)
-console, and paste the numbers at the \texttt{1:} prompt with \texttt{Edit}
-\(\triangleright\) \texttt{Paste}. All of the numbers will automatically be
-entered into the vector \texttt{x}.
-\item The command \texttt{Ctrl+l} clears the display in the
-Microsoft\(\circledR\) Windows \(\mathsf{R}\) Gui. In Emacs/ESS,
-press \texttt{Ctrl+l} repeatedly to cycle point (the place where the cursor
-is) to the bottom, middle, and top of the display.
 \item Once you use \(\mathsf{R}\) for awhile there may be some commands
 that you wish to run automatically whenever \(\mathsf{R}\)
-starts. These commands may be saved in a file called \texttt{Rprofile.site}
-\index{Rprofile.site@\texttt{Rprofile.site}} which is
-usually in the \texttt{etc} folder, which lives in the \(\mathsf{R}\) home
-directory (which on Microsoft\(\circledR\) Windows usually is
-\texttt{C:\textbackslash{}Program Files\textbackslash{}R}). Alternatively, you can make a file
+starts.
+You can make a file
 \texttt{.Rprofile} \index{.Rprofile@\texttt{.Rprofile}} to be
 stored in the user's home directory, or anywhere \(\mathsf{R}\) is
 invoked. This allows for multiple configurations for different
@@ -849,9 +402,3 @@ case \(\mathsf{R}\) will say \texttt{[previously saved workspace
 \(\mathsf{R}\), but I find that it causes more trouble than it saves
 with beginners.
 \end{itemize}
-
-\newpage{}
-
-\section{Exercises}
-\label{sec-2-7}
-\setcounter{thm}{0}
