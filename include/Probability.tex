@@ -3,8 +3,8 @@
 
 \noindent
 In this chapter we define the basic terminology associated with
-probability and derive some of its properties. We discuss three
-interpretations of probability. We discuss conditional probability and
+probability and derive some of its properties.
+We discuss conditional probability and
 independent events, along with Bayes' Theorem. We finish the chapter
 with an introduction to random variables, which paves the way for the
 next two chapters.
@@ -21,13 +21,10 @@ a dart on a board, how many red lights you encounter on the drive
 home, how many ants traverse a certain patch of sidewalk over a short
 period, \emph{etc}.
 
-\textbf{What do I want them to know?}
+\textbf{Highlights:}
 \begin{itemize}
-\item that there are multiple interpretations of probability, and the
-methods used depend somewhat on the philosophy chosen
 \item nuts and bolts of basic probability jargon: sample spaces, events,
 probability functions, \emph{etc}.
-\item how to count
 \item conditional probability and its relationship with independence
 \item Bayes' Rule and how it relates to the subjective view of probability
 \item what we mean by 'random variables', and where they come from
@@ -52,17 +49,9 @@ unpredictable selection of an outcome in \(S\).
 \subsection{How to do it with \(\mathsf{R}\)}
 \label{sec-4-1-1}
 
-Most of the probability work in this book is done with the \texttt{prob}
-package \cite{prob}. A sample space is (usually) represented by a
-\emph{data frame}, that is, a rectangular collection of variables (see
-Section \ref{sec-3-5-2}). Each row of the data frame corresponds to
-an outcome of the experiment. The data frame choice is convenient both
-for its simplicity and its compatibility with the \(\mathsf{R}\)
-Commander. Data frames alone are, however, not sufficient to describe
-some of the more interesting probabilistic applications we will study
-later; to handle those we will need to consider a more general \emph{list}
-data structure. See Section \ref{sec-4-6-2-1} for details.
-
+A sample space is (usually) represented by a \emph{data frame}, that is, a rectangular collection of variables.
+Each row of the data frame corresponds to an outcome of the experiment.
+The data frame choice is convenient for its simplicity and compatibility with many R functions and packages.
 
 Consider the random experiment of dropping a Styrofoam cup onto the
 floor from a height of four feet. The cup hits the ground and
@@ -70,10 +59,10 @@ eventually comes to rest. It could land upside down, right side up, or
 it could land on its side. We represent these possible outcomes of the
 random experiment by the following.
 
-\begin{verbatim}
+\begin{Verbatim}
 S <- data.frame(lands = c("down","up","side"))
 S
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   lands
@@ -90,9 +79,7 @@ outcomes \texttt{down}, \texttt{up}, and \texttt{side}.
 Some sample spaces are so common that convenience wrappers were
 written to set them up with minimal effort. The underlying machinery
 that does the work includes the \texttt{expand.grid} function in the \texttt{base}
-package \cite{base}, \texttt{combn} in the \texttt{combinat} package
-\cite{combinat}, and \texttt{permsn} in the \texttt{prob} package
-\cite{prob}[fn:fn-seasoned].
+package, \texttt{combn} in the \texttt{utils} package, both are automatically loaded.
 
 \subsection{Sampling from Urns}
 \label{sec-4-1-2}
@@ -130,7 +117,33 @@ equivalent to selecting a ball from an urn with six elements, labeled
 \subsubsection{How to do it with \(\mathsf{R}\)}
 \label{sec-4-1-2-1}
 
-The \texttt{prob} package \cite{prob} accomplishes sampling from urns with
+\begin{Verbatim}
+urnsamples <- function (x, size, replace = FALSE, ordered = FALSE, ...){
+  nurn <- length(x)
+  if (isTRUE(replace)) {
+    ind <- as.matrix(expand.grid(rep(list(seq(nurn)), size)))
+    if (isTRUE(ordered)) ind <- t(ind)
+    else ind <- unique(apply(ind, 1, sort), MARGIN = 2)
+  } else {
+    ind <- combn(seq(nurn), size)
+    if (isTRUE(ordered)) {
+      perm <- combinat::permn(size)
+      perm <- matrix(unlist(perm), ncol=length(perm))
+      res <- matrix(nrow=size, ncol=0)
+      for (i in seq(length=ncol(ind))) {
+          perms <- matrix(ind[, i][perm], nrow = size)
+          res <- cbind(res, perms)
+      }
+      ind <- res
+    }
+  }
+  return(data.frame(t(matrix(x[ind], nrow = size))))
+}
+\end{Verbatim}
+
+Note that the \texttt{urnsamples} function uses the package \texttt{combinat}.
+
+We will accomplish sampling from urns with
 the \texttt{urnsamples} \index{urnsamples@\texttt{urnsamples}}
 function, which has arguments \texttt{x}, \texttt{size}, \texttt{replace}, and
 \texttt{ordered}. The argument \texttt{x} represents the urn from which sampling is
@@ -150,9 +163,9 @@ If sampling is with replacement, then we can get any outcome 1, 2, or
 track of the order of the draws that we observe. We can accomplish
 this in \(\mathsf{R}\) with
 
-\begin{verbatim}
+\begin{Verbatim}
 urnsamples(1:3, size = 2, replace = TRUE, ordered = TRUE)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
   X1 X2
@@ -173,6 +186,15 @@ numbers 1 through 3 are listed. This experiment is equivalent to
 rolling a 3-sided die twice, which we could have accomplished with
 \texttt{rolldie(2, nsides = 3)}.
 
+\begin{Verbatim}
+rolldie <- function(times, nsides = 6, makespace = FALSE){
+    res <- expand.grid(rep(list(seq(nsides)), times))
+    names(res) <- c(paste(rep("X", times), 1:times, sep = ""))
+    if (makespace) res$probs <- 1/nrow(res)
+    return(res)
+}
+\end{Verbatim}
+
 \subsubsection{Ordered, Without Replacement}
 \label{sec-4-1-2-3}
 
@@ -181,9 +203,9 @@ number twice in any row. Order is still important, however, so we
 expect to see the outcomes \texttt{1,2} and \texttt{2,1} somewhere in our data
 frame.
 
-\begin{verbatim}
+\begin{Verbatim}
 urnsamples(1:3, size = 2, replace = FALSE, ordered = TRUE)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   X1 X2
@@ -210,9 +232,9 @@ Again, we may not observe the same outcome twice, but in this case, we
 will only retain those outcomes which (when jumbled) would not
 duplicate earlier ones.
 
-\begin{verbatim}
+\begin{Verbatim}
 urnsamples(1:3, size = 2, replace = FALSE, ordered = FALSE) 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   X1 X2
@@ -233,9 +255,9 @@ The last possibility is perhaps the most interesting. We replace the
 balls after every draw, but we do not remember the order in which the
 draws came.
 
-\begin{verbatim}
+\begin{Verbatim}
 urnsamples(1:3, size = 2, replace = TRUE, ordered = FALSE) 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   X1 X2
@@ -271,7 +293,6 @@ regardless of its actual contents. We may thus imagine that while
 there are two red balls in the urn, the balls are such that we can
 tell them apart (in principle) by looking closely enough at the
 imperfections on their surface.
-
 In this way, when the \texttt{x} argument of \texttt{urnsamples} has repeated
 elements, the resulting sample space may appear to be \texttt{ordered = TRUE}
 even when, in fact, the call to the function was \texttt{urnsamples(...,
@@ -289,19 +310,27 @@ exclusive} \index{mutually exclusive} or \emph{disjoint} if \(A_{i}\cap
 A_{j}=\emptyset\) for any distinct pair \(A_{i}\neq A_{j}\). For
 instance, in the coin-toss experiment the events \( A = \{
 \mbox{Heads} \}\) and \( B = \{ \mbox{Tails} \} \) would be mutually
-exclusive. Now would be a good time to review the algebra of sets in
-Appendix \ref{sec-21-1}.
+exclusive.
 
 \subsection{How to do it with \(\mathsf{R}\)}
 \label{sec-4-2-1}
 
+\begin{Verbatim}
+tosscoin <- function (times, makespace = FALSE){
+    res <- expand.grid(rep(list(c("H", "T")), times))
+    names(res) <- c(paste(rep("toss", times), 1:times, sep = ""))
+    if (makespace) res$probs <- 1/nrow(res)
+    return(res)
+}
+\end{Verbatim}
+
 Given a data frame sample/probability space \texttt{S}, we may extract rows
 using the \texttt{[]} operator:
 
-\begin{verbatim}
+\begin{Verbatim}
 S <- tosscoin(2, makespace = TRUE) 
 S[1:3, ] 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   toss1 toss2 probs
@@ -310,9 +339,9 @@ S[1:3, ]
 : 3     H     T  0.25
 \end{verbatim}
 
-\begin{verbatim}
+\begin{Verbatim}
 S[c(2,4), ] 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   toss1 toss2 probs
@@ -323,13 +352,27 @@ S[c(2,4), ]
 and so forth. We may also extract rows that satisfy a logical
 expression using the \texttt{subset} function, for instance
 
-\begin{verbatim}
-S <- cards() 
-\end{verbatim}
+\begin{Verbatim}
+cards <- function (jokers = FALSE, makespace = FALSE){
+    x <- c(2:10, "J", "Q", "K", "A")
+    y <- c("Club", "Diamond", "Heart", "Spade")
+    res <- expand.grid(rank = x, suit = y)
+    if (jokers) {
+        jokers <- data.frame(rank = c("Joker", "Joker"), suit = c(NA, NA))
+        res <- rbind(res, jokers)
+    }
+    if (makespace) res$probs <- 1/nrow(res)
+    return(res)
+}
+\end{Verbatim}
 
-\begin{verbatim}
+\begin{Verbatim}
+S <- cards() 
+\end{Verbatim}
+
+\begin{Verbatim}
 subset(S, suit == "Heart") 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
    rank  suit
@@ -348,9 +391,9 @@ subset(S, suit == "Heart")
 39    A Heart
 \end{verbatim}
 
-\begin{verbatim}
+\begin{Verbatim}
 subset(S, rank %in% 7:9)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
    rank    suit
@@ -371,9 +414,9 @@ subset(S, rank %in% 7:9)
 We could continue indefinitely. Also note that mathematical
 expressions are allowed:
 
-\begin{verbatim}
+\begin{Verbatim}
 subset(rolldie(3), X1+X2+X3 > 16) 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :     X1 X2 X3
@@ -382,128 +425,6 @@ subset(rolldie(3), X1+X2+X3 > 16)
 : 215  5  6  6
 : 216  6  6  6
 \end{verbatim}
-
-\subsection{Functions for Finding Subsets}
-\label{sec-4-2-2}
-
-It does not take long before the subsets of interest become
-complicated to specify. Yet the main idea remains: we have a
-particular logical condition to apply to each row. If the row
-satisfies the condition, then it should be in the subset. It should
-not be in the subset otherwise. The ease with which the condition may
-be coded depends of course on the question being asked. Here are a few
-functions to get started.
-
-\subsubsection{The \texttt{\%in\%} function}
-\label{sec-4-2-2-1}
-
-The function \texttt{\%in\%} helps to learn whether each value of one vector
-lies somewhere inside another vector.
-
-\begin{verbatim}
-x <- 1:10 
-y <- 8:12 
-y %in% x
-\end{verbatim}
-
-\begin{verbatim}
-: [1]  TRUE  TRUE  TRUE FALSE FALSE
-\end{verbatim}
-
-Notice that the returned value is a vector of length 5 which tests
-whether each element of \texttt{y} is in \texttt{x}, in turn.
-
-\subsubsection{The \texttt{isin} function}
-\label{sec-4-2-2-2}
-
-It is more common to want to know whether the \emph{whole} vector \texttt{y} is in
-\texttt{x}. We can do this with the \texttt{isin} function.
-
-\begin{verbatim}
-isin(x,y) 
-\end{verbatim}
-
-\begin{verbatim}
-: [1] FALSE
-\end{verbatim}
-
-Of course, one may ask why we did not try something like \texttt{all(y \%in\%
-x)}, which would give a single result, \texttt{TRUE}. The reason is that the
-answers are different in the case that \texttt{y} has repeated
-values. Compare:
-
-\begin{verbatim}
-x <- 1:10 
-y <- c(3,3,7) 
-\end{verbatim}
-
-\begin{verbatim}
-all(y %in% x)
-isin(x,y) 
-\end{verbatim}
-
-\begin{verbatim}
-: [1] TRUE
-: [1] FALSE
-\end{verbatim}
-
-The reason for the above is of course that \texttt{x} contains the value 3,
-but \texttt{x} does not have \emph{two} 3's. The difference is important when
-rolling multiple dice, playing cards, \emph{etc}. Note that there is an
-optional argument \texttt{ordered} which tests whether the elements of \texttt{y}
-appear in \texttt{x} in the order in which they are appear in \texttt{y}. The
-consequences are
-
-\begin{verbatim}
-isin(x, c(3,4,5), ordered = TRUE) 
-isin(x, c(3,5,4), ordered = TRUE) 
-\end{verbatim}
-
-\begin{verbatim}
-: [1] TRUE
-: [1] FALSE
-\end{verbatim}
-
-The connection to probability is that have a data frame sample space
-and we would like to find a subset of that space. A \texttt{data.frame}
-method was written for \texttt{isin} that simply applies the function to each
-row of the data frame. We can see the method in action with the
-following:
-
-\begin{verbatim}
-S <- rolldie(4) 
-subset(S, isin(S, c(2,2,6), ordered = TRUE)) 
-\end{verbatim}
-
-\begin{verbatim}
-     X1 X2 X3 X4
-188   2  2  6  1
-404   2  2  6  2
-620   2  2  6  3
-836   2  2  6  4
-1052  2  2  6  5
-1088  2  2  1  6
-1118  2  1  2  6
-1123  1  2  2  6
-1124  2  2  2  6
-1125  3  2  2  6
-1126  4  2  2  6
-1127  5  2  2  6
-1128  6  2  2  6
-1130  2  3  2  6
-1136  2  4  2  6
-1142  2  5  2  6
-1148  2  6  2  6
-1160  2  2  3  6
-1196  2  2  4  6
-1232  2  2  5  6
-1268  2  2  6  6
-\end{verbatim}
-
-There are a few other functions written to find useful subsets,
-namely, \texttt{countrep} and \texttt{isrep}. Essentially these were written to test
-for (or count) a specific number of designated values in outcomes. See
-the documentation for details.
 
 \subsection{Set Union, Intersection, and Difference}
 \label{sec-4-2-3}
@@ -527,19 +448,23 @@ Difference & \(A\backslash B\) & in \(A\) but not in \(B\) & \texttt{setdiff(A,B
 \end{tabular}
 \end{table}
 
+By default, \texttt{union}, \texttt{intersect}, and \texttt{setdiff} cannot work directly for rows in data frames.
+To manipulate data frames, we can combine these functions with the function \texttt{row.names}.
 Some examples follow. 
 
-\begin{verbatim}
+\begin{Verbatim}
 S <- cards() 
 A <- subset(S, suit == "Heart") 
 B <- subset(S, rank %in% 7:9)
-\end{verbatim}
+\end{Verbatim}
 
 We can now do some set algebra: 
 
-\begin{verbatim}
-union(A,B)
-\end{verbatim}
+\begin{Verbatim}
+S[union(row.names(A), row.names(B)),]
+S[sort(union(row.names(A), row.names(B))),]
+S[sort(as.numeric(union(row.names(A), row.names(B)))),]
+\end{Verbatim}
 
 \begin{verbatim}
    rank    suit
@@ -567,9 +492,9 @@ union(A,B)
 47    9   Spade
 \end{verbatim}
 
-\begin{verbatim}
-intersect(A,B)
-\end{verbatim}
+\begin{Verbatim}
+S[intersect(row.names(A), row.names(B)),]
+\end{Verbatim}
 
 \begin{verbatim}
 :    rank  suit
@@ -578,9 +503,9 @@ intersect(A,B)
 : 34    9 Heart
 \end{verbatim}
 
-\begin{verbatim}
-setdiff(A,B)
-\end{verbatim}
+\begin{Verbatim}
+S[setdiff(row.names(A),row.names(B)),]
+\end{Verbatim}
 
 \begin{verbatim}
    rank  suit
@@ -596,9 +521,9 @@ setdiff(A,B)
 39    A Heart
 \end{verbatim}
 
-\begin{verbatim}
-setdiff(B,A) 
-\end{verbatim}
+\begin{Verbatim}
+S[setdiff(row.names(B),row.names(A)),]
+\end{Verbatim}
 
 \begin{verbatim}
    rank    suit
@@ -616,360 +541,10 @@ setdiff(B,A)
 Notice that \texttt{setdiff} is not symmetric. Further, note that we can
 calculate the \emph{complement} of a set \(A\), denoted \(A^{c}\) and
 defined to be the elements of \(S\) that are not in \(A\) simply with
-\texttt{setdiff(S,A)}. There have been methods written for \texttt{intersect},
-\texttt{setdiff}, \texttt{subset}, and \texttt{union} in the case that the input objects
-are of class \texttt{ps}. See Section \ref{sec-4-6-2-1}.
-
-\begin{note}
-
-
-When the \texttt{prob} package \cite{prob} loads you will notice a message:
-\texttt{The following object(s) are masked from package:base: intersect,
-setdiff}. The reason for this message is that there already exist
-methods for the functions \texttt{intersect}, \texttt{setdiff}, \texttt{subset}, and
-\texttt{union} in the \texttt{base} package which ships with
-\(\mathsf{R}\). However, these methods were designed for when the
-arguments are vectors of the same mode. Since we are manipulating
-sample spaces which are data frames and lists, it was necessary to
-write methods to handle those cases as well. When the \texttt{prob} package
-is loaded, \(\mathsf{R}\) recognizes that there are multiple versions
-of the same function in the search path and acts to shield the new
-definitions from the existing ones. But there is no cause for alarm,
-thankfully, because the \texttt{prob} functions have been carefully defined
-to match the usual \texttt{base} package definition in the case that the
-arguments are vectors.
-\end{note}
-
-\section{Model Assignment}
-\label{sec-4-3}
-
-Let us take a look at the coin-toss experiment more closely. What do
-we mean when we say "the probability of Heads" or write
-\(\mathbb{P}(\mbox{Heads})\)? Given a coin and an itchy thumb, how do
-we go about finding what \(\mathbb{P}(\mbox{Heads})\) should be?
-
-\subsection{The Measure Theory Approach}
-\label{sec-4-3-1}
-
-This approach states that the way to handle
-\(\mathbb{P}(\mbox{Heads})\) is to define a mathematical function,
-called a \emph{probability measure}, on the sample space. Probability
-measures satisfy certain axioms (to be introduced later) and have
-special mathematical properties, so not just any mathematical function
-will do. But in any given physical circumstance there are typically
-all sorts of probability measures from which to choose, and it is left
-to the experimenter to make a reasonable choice -- one usually based
-on considerations of objectivity. For the tossing coin example, a
-valid probability measure assigns probability \(p\) to the event \( \{
-\mbox{Heads} \} \), where \(p\) is some number \(0\leq p\leq1\). An
-experimenter that wishes to incorporate the symmetry of the coin would
-choose \(p=1/2\) to balance the likelihood of \( \{\mbox{Heads} \} \)
-and \( \{ \mbox{Tails} \} \).
-
-Once the probability measure is chosen (or determined), there is not
-much left to do. All assignments of probability are made by the
-probability function, and the experimenter needs only to plug the
-event \(\{ \mbox{Heads} \}\) into to the probability function to find
-\(\mathbb{P}(\mbox{Heads})\). In this way, the probability of an event
-is simply a calculated value, nothing more, nothing less. Of course
-this is not the whole story; there are many theorems and consequences
-associated with this approach that will keep us occupied for the
-remainder of this book. The approach is called \emph{measure theory}
-because the measure (probability) of a set (event) is associated with
-how big it is (how likely it is to occur).
-
-The measure theory approach is well suited for situations where there
-is symmetry to the experiment, such as flipping a balanced coin or
-spinning an arrow around a circle with well-defined pie slices. It is
-also handy because of its mathematical simplicity, elegance, and
-flexibility. There are literally volumes of information that one can
-prove about probability measures, and the cold rules of mathematics
-allow us to analyze intricate probabilistic problems with vigor.
-
-The large degree of flexibility is also a disadvantage, however. When
-symmetry fails it is not always obvious what an "objective" choice
-of probability measure should be; for instance, what probability
-should we assign to \( \{ \mbox{Heads} \} \) if we spin the coin
-rather than flip it? (It is not \(1/2\).) Furthermore, the
-mathematical rules are restrictive when we wish to incorporate
-subjective knowledge into the model, knowledge which changes over time
-and depends on the experimenter, such as personal knowledge about the
-properties of the specific coin being flipped, or of the person doing
-the flipping.
-
-The mathematician who revolutionized this way to do probability theory
-was Andrey Kolmogorov, who published a landmark monograph in 1933. See
-\href{http://www-history.mcs.st-andrews.ac.uk/Mathematicians/Kolmogorov.html}{here} for more information.
-
-\subsection{Relative Frequency Approach}
-\label{sec-4-3-2}
-
-This approach states that the way to determine
-\(\mathbb{P}(\mbox{Heads})\) is to flip the coin repeatedly, in
-exactly the same way each time. Keep a tally of the number of flips
-and the number of Heads observed. Then a good approximation to
-\(\mathbb{P}(\mbox{Heads})\) will be
-\begin{equation} 
-\mathbb{P}(\mbox{Heads})\approx\frac{\mbox{number of observed Heads}}{\mbox{total number of flips}}.
-\end{equation}
-The mathematical underpinning of this approach is the celebrated \textbf{Law
-of Large Numbers} which may be loosely described as follows. Let \(E\)
-be a random experiment in which the event \(A\) either does or does
-not occur. Perform the experiment repeatedly, in an identical manner,
-in such a way that the successive experiments do not influence each
-other. After each experiment, keep a running tally of whether or not
-the event \(A\) occurred. Let \(S_{n}\) count the number of times that
-\(A\) occurred in the \(n\) experiments. Then the law of large numbers
-says that
-\begin{equation}
-\frac{S_{n}}{n}\to\mathbb{P}(A)\mbox{ as }n\to\infty.
-\end{equation}
-As the reasoning goes, to learn about the probability of an event
-\(A\) we need only repeat the random experiment to get a reasonable
-estimate of the probability's value, and if we are not satisfied with
-our estimate then we may simply repeat the experiment more times all
-the while confident that with more and more experiments our estimate
-will stabilize to the true value.
-
-The frequentist approach is good because it is relatively light on
-assumptions and does not worry about symmetry or claims of objectivity
-like the measure-theoretic approach does. It is perfect for the
-spinning coin experiment. One drawback to the method is that one can
-never know the exact value of a probability, only a long-run
-approximation. It also does not work well with experiments that can
-not be repeated indefinitely, say, the probability that it will rain
-today, the chances that you get will get an A in your Statistics
-class, or the probability that the world is destroyed by nuclear war.
-
-This approach was espoused by Richard von Mises in the early twentieth
-century, and some of his main ideas were incorporated into the measure
-theory approach. See \href{http://www-history.mcs.st-andrews.ac.uk/Biographies/Mises.html}{here} for more.
-
-\subsection{The Subjective Approach}
-\label{sec-4-3-3}
-
-The subjective approach interprets probability as the experimenter's
-\emph{degree of belief} that the event will occur. The estimate of the
-probability of an event is based on the totality of the individual's
-knowledge at the time. As new information becomes available, the
-estimate is modified accordingly to best reflect his/her current
-knowledge. The method by which the probabilities are updated is
-commonly done with Bayes' Rule, discussed in Section \ref{sec-4-8}.
-
-So for the coin toss example, a person may have
-\(\mathbb{P}(\mbox{Heads})=1/2\) in the absence of additional
-information. But perhaps the observer knows additional information
-about the coin or the thrower that would shift the probability in a
-certain direction. For instance, parlor magicians may be trained to be
-quite skilled at tossing coins, and some are so skilled that they may
-toss a fair coin and get nothing but Heads, indefinitely. I have
-\emph{seen} this. It was similarly claimed in \emph{Bringing Down the House}
-\cite{Mezrich2003} that MIT students were accomplished enough with
-cards to be able to cut a deck to the same location, every single
-time. In such cases, one clearly should use the additional information
-to assign \(\mathbb{P}(\mbox{Heads})\) away from the symmetry value of
-\(1/2\).
-
-This approach works well in situations that cannot be repeated
-indefinitely, for example, to assign your probability that you will
-get an A in this class, the chances of a devastating nuclear war, or
-the likelihood that a cure for the common cold will be discovered.
-
-The roots of subjective probability reach back a long time. See \href{http://en.wikipedia.org/wiki/Subjective_probability}{here}
-for a short discussion and links to references about the subjective
-approach.
-
-\subsection{Equally Likely Model (ELM)}
-\label{sec-4-3-4}
-
-We have seen several approaches to the assignment of a probability
-model to a given random experiment and they are very different in
-their underlying interpretation. But they all cross paths when it
-comes to the equally likely model which assigns equal probability to
-all elementary outcomes of the experiment.
-
-The ELM appears in the measure theory approach when the experiment
-boasts symmetry of some kind. If symmetry guarantees that all outcomes
-have equal "size", and if outcomes with equal "size" should get
-the same probability, then the ELM is a logical objective choice for
-the experimenter. Consider the balanced 6-sided die, the fair coin, or
-the dart board with equal-sized wedges.
-
-The ELM appears in the subjective approach when the experimenter
-resorts to indifference or ignorance with respect to his/her knowledge
-of the outcome of the experiment. If the experimenter has no prior
-knowledge to suggest that (s)he prefer Heads over Tails, then it is
-reasonable for the him/her to assign equal subjective probability to
-both possible outcomes.
-
-The ELM appears in the relative frequency approach as a fascinating
-fact of Nature: when we flip balanced coins over and over again, we
-observe that the proportion of times that the coin comes up Heads
-tends to \(1/2\). Of course if we assume that the measure theory
-applies then we can prove that the sample proportion must tend to 1/2
-as expected, but that is putting the cart before the horse, in a
-manner of speaking.
-
-The ELM is only available when there are finitely many elements in the
-sample space.
-
-\subsubsection{How to do it with \(\mathsf{R}\)}
-\label{sec-4-3-4-1}
-
-In the \texttt{prob} package \cite{prob}, a probability space is an object of
-outcomes \texttt{S} and a vector of probabilities (called \texttt{probs}) with
-entries that correspond to each outcome in \texttt{S}. When \texttt{S} is a data
-frame, we may simply add a column called \texttt{probs} to \texttt{S} and we will be
-finished; the probability space will simply be a data frame which we
-may call \texttt{S}. In the case that S is a list, we may combine the
-\texttt{outcomes} and \texttt{probs} into a larger list, \texttt{space}; it will have two
-components: \texttt{outcomes} and \texttt{probs}. The only requirements we need are
-for the entries of \texttt{probs} to be nonnegative and \texttt{sum(probs)} to be
-one.
-
-To accomplish this in \(\mathsf{R}\), we may use the \texttt{probspace}
-function. The general syntax is \texttt{probspace(x, probs)}, where \texttt{x} is a
-sample space of outcomes and \texttt{probs} is a vector (of the same length
-as the number of outcomes in \texttt{x}). The specific choice of \texttt{probs}
-depends on the context of the problem, and some examples follow to
-demonstrate some of the more common choices.
-
-
-The Equally Likely Model asserts that every outcome of the sample
-space has the same probability, thus, if a sample space has \(n\)
-outcomes, then \texttt{probs} would be a vector of length \(n\) with
-identical entries \(1/n\). The quickest way to generate \texttt{probs} is
-with the \texttt{rep} function. We will start with the experiment of rolling
-a die, so that \(n=6\). We will construct the sample space, generate
-the \texttt{probs} vector, and put them together with \texttt{probspace}.
-
-\begin{verbatim}
-outcomes <- rolldie(1) 
-p <- rep(1/6, times = 6) 
-probspace(outcomes, probs = p) 
-\end{verbatim}
-
-\begin{verbatim}
-:   X1     probs
-: 1  1 0.1666667
-: 2  2 0.1666667
-: 3  3 0.1666667
-: 4  4 0.1666667
-: 5  5 0.1666667
-: 6  6 0.1666667
-\end{verbatim}
-
-The \texttt{probspace} function is designed to save us some time in the most
-common situations. For example, due to the especial simplicity of the
-sample space in this case, we could have achieved the same result with
-only (note the name change for the first column)
-
-\begin{verbatim}
-probspace(1:6, probs = p) 
-\end{verbatim}
-
-\begin{verbatim}
-:   x     probs
-: 1 1 0.1666667
-: 2 2 0.1666667
-: 3 3 0.1666667
-: 4 4 0.1666667
-: 5 5 0.1666667
-: 6 6 0.1666667
-\end{verbatim}
-
-Further, since the equally likely model plays such a fundamental role
-in the study of probability the \texttt{probspace} function will assume that
-the equally model is desired if no \texttt{probs} are specified. Thus, we get
-the same answer with only
-
-\begin{verbatim}
-probspace(1:6) 
-\end{verbatim}
-
-\begin{verbatim}
-:   x     probs
-: 1 1 0.1666667
-: 2 2 0.1666667
-: 3 3 0.1666667
-: 4 4 0.1666667
-: 5 5 0.1666667
-: 6 6 0.1666667
-\end{verbatim}
-
-And finally, since rolling dice is such a common experiment in
-probability classes, the \texttt{rolldie} function has an additional logical
-argument \texttt{makespace} that will add a column of equally likely \texttt{probs}
-to the generated sample space:
-
-\begin{verbatim}
-rolldie(1, makespace = TRUE)
-\end{verbatim}
-
-\begin{verbatim}
-:   X1     probs
-: 1  1 0.1666667
-: 2  2 0.1666667
-: 3  3 0.1666667
-: 4  4 0.1666667
-: 5  5 0.1666667
-: 6  6 0.1666667
-\end{verbatim}
-
-\noindent
-or just \texttt{rolldie(1, TRUE)}. Many of the other sample space functions
-(\texttt{tosscoin}, \texttt{cards}, \texttt{roulette}, \emph{etc}.) have similar \texttt{makespace}
-arguments. Check the documentation for details.
-
-
-
-One sample space function that does NOT have a \texttt{makespace} option is
-the \texttt{urnsamples} function. This was intentional. The reason is that
-under the varied sampling assumptions the outcomes in the respective
-sample spaces are NOT, in general, equally likely. It is important for
-the user to carefully consider the experiment to decide whether or not
-the outcomes are equally likely and then use \texttt{probspace} to assign the
-model.
-
-\label{exa-unbalanced-coin} \textbf{An unbalanced coin.} While the \texttt{makespace}
-argument to \texttt{tosscoin} is useful to represent the tossing of a \emph{fair}
-coin, it is not always appropriate. For example, suppose our coin is
-not perfectly balanced, for instance, maybe the \(H\) side is somewhat
-heavier such that the chances of a \(H\) appearing in a single toss is
-0.70 instead of 0.5. We may set up the probability space with
-
-\begin{verbatim}
-probspace(tosscoin(1), probs = c(0.70, 0.30)) 
-\end{verbatim}
-
-\begin{verbatim}
-:   toss1 probs
-: 1     H   0.7
-: 2     T   0.3
-\end{verbatim}
-
-The same procedure can be used to represent an unbalanced die,
-roulette wheel, \emph{etc}.
-
-\subsection{Words of Warning}
-\label{sec-4-3-5}
-
-It should be mentioned that while the splendour of \(\mathsf{R}\) is
-uncontested, it, like everything else, has limits both with respect to
-the sample/probability spaces it can manage and with respect to the
-finite accuracy of the representation of most numbers (see the
-\(\mathsf{R}\) FAQ 7.31). When playing around with probability, one
-may be tempted to set up a probability space for tossing 100 coins or
-rolling 50 dice in an attempt to answer some scintillating
-question. (Bear in mind: rolling a die just 9 times has a sample space
-with over \emph{10 million} outcomes.)
-
-Alas, even if there were enough RAM to barely hold the sample space
-(and there were enough time to wait for it to be generated), the
-infinitesimal probabilities that are associated with \emph{so many}
-outcomes make it difficult for the underlying machinery to handle
-reliably. In some cases, special algorithms need to be called just to
-give something that holds asymptotically. User beware.
+the following code:
+\begin{Verbatim}
+S[setdiff(row.names(S),row.names(A)),]
+\end{Verbatim}
 
 \section{Properties of Probability}
 \label{sec-4-4}
@@ -1124,15 +699,14 @@ the elementary outcomes each have probability \(1/8\).
 
 What is \(\mathbb{P}(\mbox{exactly 2 Boys})\)? Inspecting the sample
 space reveals three outcomes with exactly two boys: \( \{ BBG,\,
-BGB,\, GBB \} \).  Therefore \(\mathbb{P}(\mbox{exactly 2 Boys}) =
-3/8\).
+BGB,\, GBB \} \).
+Therefore \[ \mathbb{P}(\mbox{exactly 2 Boys}) = 3/8. \]
 
 What is \(\mathbb{P}(\mbox{at most 2 Boys})\)? One way to solve the
 problem would be to count the outcomes that have 2 or less Boys, but a
 quicker way would be to recognize that the only way that the event
 \(\{ \mbox{at most 2 Boys} \}\) does \emph{not} occur is the event \(\{
 \mbox{all Boys} \}\).
-
 Thus \[ \mathbb{P}(\mbox{at most 2 Boys}) = 1 - \mathbb{P}(BBB) = 1 -
 1/8 = 7/8. \]
 
@@ -1198,61 +772,35 @@ answer under the equally likely model. This is the subject of Section
 \subsubsection{How to do it with \(\mathsf{R}\)}
 \label{sec-4-4-3-1}
 
-Probabilities are calculated in the \texttt{prob} package \cite{prob} with
-the \texttt{prob} function.
-
 Consider the experiment of drawing a card from a standard deck of
 playing cards. Let's denote the probability space associated with the
 experiment as \texttt{S}, and let the subsets \texttt{A} and \texttt{B} be defined by the
 following:
 
-\begin{verbatim}
+\begin{Verbatim}
 S <- cards(makespace = TRUE) 
 A <- subset(S, suit == "Heart") 
 B <- subset(S, rank %in% 7:9)
-\end{verbatim}
+\end{Verbatim}
 
 Now it is easy to calculate 
 
-\begin{verbatim}
-Prob(A) 
-\end{verbatim}
+\begin{Verbatim}
+nrow(A)/nrow(S)
+nrow(B)/nrow(S)
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 0.25
+: [1] 0.2307692
 \end{verbatim}
 
 Note that we can get the same answer with 
 
-\begin{verbatim}
-Prob(S, suit == "Heart") 
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.25
-\end{verbatim}
-
-We also find \texttt{Prob(B) = 0.23} (listed here approximately, but
-12/52 actually). Internally, the \texttt{prob} function operates by summing
-the \texttt{probs} column of its argument. It will find subsets on-the-fly if
-desired.
-
-We have as yet glossed over the details. More specifically, \texttt{prob} has
-three arguments: \texttt{x}, which is a probability space (or a subset of
-one), \texttt{event}, which is a logical expression used to define a subset,
-and \texttt{given}, which is described in Section \ref{sec-4-6}.
-
-\emph{WARNING}. The \texttt{event} argument is used to define a subset of \texttt{x},
-that is, the only outcomes used in the probability calculation will be
-those that are elements of \texttt{x} and satisfy \texttt{event} simultaneously. In
-other words, \texttt{Prob(x, event)} calculates
-
-\begin{verbatim}
-: Prob(intersect(x, subset(x, event)))
-\end{verbatim}
-
-Consequently, \texttt{x} should be the entire probability space in the case
-that \texttt{event} is non-null.
+\begin{Verbatim}
+sum(A$probs)
+sum(B$probs)
+\end{Verbatim}
 
 \section{Counting Methods}
 \label{sec-4-5}
@@ -1422,6 +970,17 @@ above.
 \end{tabular}
 \end{table}
 
+\begin{Verbatim}
+nsamp <- function (n, k, replace = FALSE, ordered = FALSE){
+  if (ordered) {
+    if (replace) return(n^k)
+    return(factorial(n)/factorial(n - k))
+  }
+  if (replace) return(choose(n - 1 + k, k))
+  return(choose(n, k))
+}
+nsamp <- Vectorize(nsamp)
+\end{Verbatim}
 
 
 We will compute the number of outcomes for each of the four
@@ -1430,12 +989,12 @@ We will compute the number of outcomes for each of the four
 urn with three distinguishable elements.
 
 
-\begin{verbatim}
+\begin{Verbatim}
 nsamp(n=3, k=2, replace = TRUE, ordered = TRUE) 
 nsamp(n=3, k=2, replace = FALSE, ordered = TRUE) 
 nsamp(n=3, k=2, replace = FALSE, ordered = FALSE) 
 nsamp(n=3, k=2, replace = TRUE, ordered = FALSE) 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 9
@@ -1470,24 +1029,21 @@ and lastly, each of the 3 walls has 31 lighting possibilities (\texttt{rep =
 TRUE}, \texttt{ord = TRUE}). These three numbers can be calculated quickly
 with
 
-\begin{verbatim}
+\begin{Verbatim}
 n <- c(11,7,31) 
 k <- c(3,4,3) 
 r <- c(FALSE,FALSE,TRUE) 
-\end{verbatim}
-
-\begin{verbatim}
 x <- nsamp(n, k, rep = r, ord = TRUE) 
-\end{verbatim}
+\end{Verbatim}
 
 (Notice that \texttt{ordered} is always \texttt{TRUE}; \texttt{nsamp} will recycle
 \texttt{ordered} and \texttt{replace} to the appropriate length.) By the
 Multiplication Principle, the number of ways to complete the
 experiment is the product of the entries of \texttt{x}:
 
-\begin{verbatim}
+\begin{Verbatim}
 prod(x) 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 24774195600
@@ -1495,9 +1051,9 @@ prod(x)
 
 Compare this with the some other ways to compute the same thing: 
 
-\begin{verbatim}
+\begin{Verbatim}
 (11*10*9)*(7*6*5*4)*31^3 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 24774195600
@@ -1505,9 +1061,9 @@ Compare this with the some other ways to compute the same thing:
 
 or alternatively 
 
-\begin{verbatim}
+\begin{Verbatim}
 prod(9:11)*prod(4:7)*31^3 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 24774195600
@@ -1515,9 +1071,9 @@ prod(9:11)*prod(4:7)*31^3
 
 or even 
 
-\begin{verbatim}
+\begin{Verbatim}
 prod(factorial(c(11,7))/factorial(c(8,3)))*31^3 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 24774195600
@@ -1603,18 +1159,15 @@ probabilities:
 We can make the plot in Figure \ref{fig-birthday} with the following
 sequence of commands.
 
-\begin{verbatim}
-library(RcmdrPlugin.IPSUR)
-g <- Vectorize(pbirthday.ipsur)
+\begin{Verbatim}
+g <- Vectorize(pbirthday)
 plot(1:50, g(1:50), xlab = "Number of people in room", 
   ylab = "Prob(at least one match)" )
 abline(h = 0.5)
-abline(v = 23, lty = 2)
-remove(g)
-\end{verbatim}
+abline(v = qbirthday(0.5))
+\end{Verbatim}
 
-There is a \texttt{Birthday problem} item in the \texttt{Probability} menu of
-\texttt{RcmdrPlugin.IPSUR}. In the base \(\mathsf{R}\) version, one can
+One can use \texttt{pbirthday} and \texttt{qbirthday} to
 compute approximate probabilities for the more general case of
 probabilities other than 1/2, for differing total number of days in
 the year, and even for more than two matches.
@@ -1643,10 +1196,6 @@ The conditional probability of \(B\) given \(A\), denoted
 \begin{equation}
 \mathbb{P}(B|A)=\frac{\mathbb{P}(A\cap B)}{\mathbb{P}(A)},\quad \mbox{if }\mathbb{P}(A)>0.
 \end{equation}
-We will not be discussing a conditional probability of \(B\) given
-\(A\) when \(\mathbb{P}(A)=0\), even though this theory exists, is
-well developed, and forms the foundation for the study of stochastic
-processes[fn-condprob].
 \end{defn}
 
 
@@ -1683,15 +1232,16 @@ sample space consists of all ordered pairs \((i,j)\) of the numbers
 \mbox{sum of outcomes at least 8} \} \). The sample space may be
 represented by a matrix:
 
-\begin{verbatim}
-A <- rolldie(2)
-B <- subset(A, X1==X2)
-C <- subset(A, X1+X2 > 7)
-B$lab <- rep("X", dim(B)[1])
-C$lab <- rep("O", dim(C)[1])
-p <- ggplot(rbind(B, C), aes(x=X1, y=X2, label=lab))
-p + geom_text(size = 15) + xlab("First roll") + ylab("Second roll")
-\end{verbatim}
+\begin{Verbatim}
+S <- rolldie(2)
+A <- subset(S, X1==X2)
+B <- subset(S, X1+X2 >= 8)
+A$pch <- "X"
+B$pch <- "O"
+with(rbind(A, B),
+    plot(X1, X2, pch=pch, xlab="First roll", ylab="Second roll")
+)
+\end{Verbatim}
 
 \begin{figure}[ht!]
 \centering
@@ -1723,10 +1273,10 @@ outcomes that also fall in \(B\), thus, the probability of \(B\) given
 Continuing with Example \ref{exa-Toss-a-six-sided-die-twice}, the first thing to do is set
 up the probability space with the \texttt{rolldie} function.
 
-\begin{verbatim}
+\begin{Verbatim}
 S <- rolldie(2, makespace = TRUE)  # assumes ELM
 head(S)                            #  first few rows
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   X1 X2      probs
@@ -1740,32 +1290,18 @@ head(S)                            #  first few rows
 
 Next we define the events
 
-\begin{verbatim}
+\begin{Verbatim}
 A <- subset(S, X1 == X2)
 B <- subset(S, X1 + X2 >= 8)
-\end{verbatim}
+AB <- S[intersect(row.names(A), row.names(B)), ]
+\end{Verbatim}
 
-And now we are ready to calculate probabilities. To do conditional
-probability, we use the \texttt{given} argument of the \texttt{prob} function:
+And now we are ready to calculate probabilities:
 
-\begin{verbatim}
-Prob(A, given = B)
-Prob(B, given = A)
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.2
-: [1] 0.5
-\end{verbatim}
-
-Note that we do not actually need to define the events \(A\) and \(B\)
-separately as long as we reference the original probability space
-\(S\) as the first argument of the \texttt{prob} calculation:
-
-\begin{verbatim}
-Prob(S, X1==X2, given = (X1 + X2 >= 8) )
-Prob(S, X1+X2 >= 8, given = (X1==X2) )
-\end{verbatim}
+\begin{Verbatim}
+sum(AB$probs)/sum(B$probs); nrow(AB)/nrow(B)
+sum(AB$probs)/sum(A$probs); nrow(AB)/nrow(A)
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 0.2
@@ -1825,69 +1361,6 @@ question, what is \(\mathbb{P}(\mbox{both Aces})\)?  \[
 B)=\mathbb{P}(A)\mathbb{P}(B|A)=\frac{4}{52}\cdot\frac{3}{51}\approx0.00452.
 \]
 
-\subsubsection{How to do it with \(\mathsf{R}\)}
-\label{sec-4-6-2-1}
-
-Continuing Example \ref{exa-two-cards-both-aces}, we set up the probability
-space by way of a three step process. First we employ the \texttt{cards}
-function to get a data frame \texttt{L} with two columns: \texttt{rank} and
-\texttt{suit}. Both columns are stored internally as factors with 13 and 4
-levels, respectively.
-
-Next we sample two cards randomly from the \texttt{L} data frame by way of
-the \texttt{urnsamples} function. It returns a list \texttt{M} which contains all
-possible pairs of rows from \texttt{L} (there are \texttt{choose(52,2)} of
-them). The sample space for this experiment is exactly the list \texttt{M}.
-
-At long last we associate a probability model with the sample
-space. This is right down the \texttt{probspace} function's alley. It assumes
-the equally likely model by default. We call this result \texttt{N} which is
-an object of class \texttt{ps} -- short for "probability space".
-
-But do not be intimidated. The object \texttt{N} is nothing more than a list
-with two elements: \texttt{outcomes} and \texttt{probs}. The \texttt{outcomes} element is
-itself just another list, with \texttt{choose(52,2)} entries, each one a data
-frame with two rows which correspond to the pair of cards chosen. The
-\texttt{probs} element is just a vector with \texttt{choose(52,2)} entries all the
-same: \texttt{1/choose(52,2)}.
-
-Putting all of this together we do 
-
-\begin{verbatim}
-L <- cards()
-M <- urnsamples(L, size = 2)
-N <- probspace(M)
-N[[1]][[1]];  N$probs[1]
-\end{verbatim}
-
-\begin{verbatim}
-:   rank suit
-: 1    2 Club
-: 2    3 Club
-: [1] 0.0007541478
-\end{verbatim}
-
-Now that we have the probability space \texttt{N} we are ready to do some
-probability. We use the \texttt{prob} function, just like before. The only
-trick is to specify the event of interest correctly, and recall that
-we were interested in \(\mathbb{P}(\mbox{both Aces})\). But if the
-cards are both Aces then the \texttt{rank} of both cards should be \texttt{A}, which
-sounds like a job for the \texttt{all} function:
-
-\begin{verbatim}
-Prob(N, all(rank == "A"))
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.004524887
-\end{verbatim}
-
-Note that this value matches what we found in Example
-\ref{exa-two-cards-both-aces}, above. We could calculate all sorts of
-probabilities at this point; we are limited only by the complexity of
-the event's computer representation.
-
-
 \label{exa-urn-7-red-3-green} Consider an urn with 10 balls inside, 7 of
 which are red and 3 of which are green. Select 3 balls successively
 from the urn. Let \( A = \{ 1^{\mathrm{st}} \mbox{ ball is red} \} \),
@@ -1895,85 +1368,6 @@ from the urn. Let \( A = \{ 1^{\mathrm{st}} \mbox{ ball is red} \} \),
 3^{\mathrm{rd}} \mbox{ ball is red} \} \). Then \[
 \mathbb{P}(\mbox{all 3 balls are red})=\mathbb{P}(A\cap B\cap
 C)=\frac{7}{10}\cdot\frac{6}{9}\cdot\frac{5}{8}\approx 0.2917.  \]
-
-\subsubsection{How to do it with \(\mathsf{R}\)}
-\label{sec-4-6-2-2}
-
-Example \ref{exa-urn-7-red-3-green} is similar to Example
-\ref{exa-two-cards-both-aces}, but it is even easier. We need to set up
-an urn (vector \texttt{L}) to hold the balls, we sample from \texttt{L} to get the
-sample space (data frame \texttt{M}), and we associate a probability vector
-(column \texttt{probs}) with the outcomes (rows of \texttt{M}) of the sample
-space. The final result is a probability space (an ordinary data frame
-\texttt{N}).
-
-It is easier for us this time because our urn is a vector instead of a
-\texttt{cards()} data frame. Before there were two dimensions of information
-associated with the outcomes (rank and suit) but presently we have
-only one dimension (color).
-
-\begin{verbatim}
-L <- rep(c("red","green"), times = c(7,3))
-M <- urnsamples(L, size = 3, replace = FALSE, ordered = TRUE)
-N <- probspace(M)
-\end{verbatim}
-
-Now let us think about how to set up the event \(\{ \mbox{all 3 balls
-are red}\} \). Rows of \texttt{N} that satisfy this condition have
-\(\mathtt{X1=="red"\ \&\ X2=="red"\ \&\ X3=="red"}\), but there must
-be an easier way. Indeed, there is. The \texttt{isrep} function (short for
-"is repeated") in the \texttt{prob} package was written for this
-purpose. The command \texttt{isrep(N,"red",3)} will test each row of \texttt{N} to
-see whether the value \texttt{red} appears \texttt{3} times. The result is exactly
-what we need to define an event with the \texttt{prob} function. Observe
-
-\begin{verbatim}
-Prob(N, isrep(N, "red", 3))
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.2916667
-\end{verbatim}
-
-Note that this answer matches what we found in Example
-\ref{exa-urn-7-red-3-green}. Now let us try some other probability
-questions. What is the probability of getting two \texttt{red}'s?
-
-\begin{verbatim}
-Prob(N, isrep(N, "red", 2))
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.525
-\end{verbatim}
-
-Note that the exact value is \(21/40\); we will learn a quick way to
-compute this in Section \ref{sec-5-6}. What is the
-probability of observing \texttt{red}, then \texttt{green}, then \texttt{red}?
-
-\begin{verbatim}
-Prob(N, isin(N, c("red","green","red"), ordered = TRUE))
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.175
-\end{verbatim}
-
-Note that the exact value is \(7/40\) (do it with the Multiplication
-Rule). What is the probability of observing \texttt{red}, \texttt{green}, and \texttt{red},
-in no particular order?
-
-\begin{verbatim}
-Prob(N, isin(N, c("red","green","red")))
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.525
-\end{verbatim}
-
-We already knew this. It is the probability of observing two \texttt{red}'s,
-above.
-
 
 Consider two urns, the first with 5 red balls and 3 green balls, and
 the second with 2 red balls and 6 green balls. Your friend randomly
@@ -1997,17 +1391,9 @@ and notice that \(A\cap B\) and \(A^{c}\cap B\) are disjoint. Therefore
 (which is 7/24 in lowest terms).
 
 
+\subsubsection{Example: smoking v.s. gender}
 
-
-We saw the \texttt{RcmdrTestDrive} data set in Chapter \ref{sec-2}
-in which a two-way table of the smoking status versus the gender was
-
-\begin{verbatim}
-library(RcmdrPlugin.IPSUR)
-data(RcmdrTestDrive)  
-.Table <- xtabs( ~ smoking + gender, data = RcmdrTestDrive)
-addmargins(.Table) # Table with marginal distributions
-\end{verbatim}
+We have a two-way table of the smoking status versus the gender:
 
 \begin{verbatim}
 :            gender
@@ -2143,7 +1529,8 @@ We can now deduce the pattern for \(n\) events, \(n>3\). The events
 will be mutually independent only if they satisfy the product equality
 pairwise, then in groups of three, in groups of four, and so forth, up
 to all \(n\) events at once. For \(n\) events, there will be
-\(2^{n}-n-1\) equations that must be satisfied (see Exercise \ref{xca-numb-cond-indep}). Although these requirements for a set of events to
+\(2^{n}-n-1\) equations that must be satisfied.
+Although these requirements for a set of events to
 be mutually independent may seem stringent, the good news is that for
 most of the situations considered in this book the conditions will all
 be met (or at least we will suppose that they are).
@@ -2172,85 +1559,20 @@ which is approximately \(0.9990234\).
 Toss ten coins. What is the probability of observing at least one
 Head?
 
-\begin{verbatim}
+\begin{Verbatim}
 S <- tosscoin(10, makespace = TRUE)
-A <- subset(S, isrep(S, vals = "T", nrep = 10))
-1 - Prob(A)
-\end{verbatim}
+A <- subset(S, rowSums(S=="T")==10)
+1-sum(A$probs)
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 0.9990234
 \end{verbatim}
 
-Compare this answer to what we got in Example \ref{exa-toss-ten-coins}.
-
-\subsection{Independent, Repeated Experiments}
-\label{sec-4-7-2}
-
-Generalizing from above it is common to repeat a certain experiment
-multiple times under identical conditions and in an independent
-manner. We have seen many examples of this already: tossing a coin
-repeatedly, rolling a die or dice, \emph{etc}.
-
-The \texttt{iidspace} function was designed specifically for this
-situation. It has three arguments: \texttt{x}, which is a vector of outcomes,
-\texttt{ntrials}, which is an integer telling how many times to repeat the
-experiment, and \texttt{probs} to specify the probabilities of the outcomes
-of \texttt{x} in a single trial.
-
-
-\textbf{An unbalanced coin} (continued, see Example \ref{exa-unbalanced-coin}). It was
-easy enough to set up the probability space for one unbalanced toss,
-however, the situation becomes more complicated when there are many
-tosses involved. Clearly, the outcome \(HHH\) should not have the same
-probability as \(TTT\), which should again not have the same
-probability as \(HTH\). At the same time, there is symmetry in the
-experiment in that the coin does not remember the face it shows from
-toss to toss, and it is easy enough to toss the coin in a similar way
-repeatedly.
-
-We may represent tossing our unbalanced coin three times with the following: 
-
-\begin{verbatim}
-iidspace(c("H","T"), ntrials = 3, probs = c(0.7, 0.3)) 
-\end{verbatim}
-
-\begin{verbatim}
-:   X1 X2 X3 probs
-: 1  H  H  H 0.343
-: 2  T  H  H 0.147
-: 3  H  T  H 0.147
-: 4  T  T  H 0.063
-: 5  H  H  T 0.147
-: 6  T  H  T 0.063
-: 7  H  T  T 0.063
-: 8  T  T  T 0.027
-\end{verbatim}
-
-As expected, the outcome \(HHH\) has the largest probability, while
-\(TTT\) has the smallest. (Since the trials are independent,
-\(\mathbb{P}(HHH)=0.7^{3}\) and \(\mathbb{P}(TTT)=0.3^{3}\), \emph{etc}.)
-Note that the result of the function call is a probability space, not
-a sample space (which we could construct already with the \texttt{tosscoin}
-or \texttt{urnsamples} functions). The same procedure could be used to model
-an unbalanced die or any other experiment that may be represented with
-a vector of possible outcomes.
-
-
-
-Note that \texttt{iidspace} will assume \texttt{x} has equally likely outcomes if no
-\texttt{probs} argument is specified. Also note that the argument \texttt{x} is a
-\emph{vector}, not a data frame. Something like 
-\begin{verbatim}
-: iidspace(tosscoin(1),...)
-\end{verbatim}
-would give an error.
-
 \section{Bayes' Rule}
 \label{sec-4-8}
 
-We mentioned the subjective view of probability in Section
-\ref{sec-4-3}. In this section we introduce a rule that
+In this section we introduce a rule that
 allows us to update our probabilities when new information becomes
 available.
 
@@ -2439,20 +1761,15 @@ available at the time.
 \subsection{How to do it with \(\mathsf{R}\)}
 \label{sec-4-8-1}
 
-There are not any special functions for Bayes' Rule in the \texttt{prob}
-package \cite{prob}, but problems like the ones above are easy enough
-to do by hand.
-
-
 \textbf{Misfiling assistants} (continued from Example \ref{exa-misfiling-assistants}). We store the prior probabilities and the likelihoods in
 vectors and go to town.
 
-\begin{verbatim}
+\begin{Verbatim}
 prior <- c(0.6, 0.3, 0.1)
 like <- c(0.003, 0.007, 0.010)
 post <- prior * like
 post / sum(post)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 0.3673469 0.4285714 0.2040816
@@ -2471,11 +1788,11 @@ the last example and suppose that the assistants misfile seven more
 documents. Using Bayes' Rule, what would the new posterior
 probabilities be?
 
-\begin{verbatim}
+\begin{Verbatim}
 newprior <- post
 post <- newprior * like^7
 post / sum(post)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 0.0003355044 0.1473949328 0.8522695627
@@ -2497,16 +1814,14 @@ one misfiled document. What if she started from the \emph{original} prior,
 then observed eight misfiled documents, and calculated the posterior?
 What would she get? It must be the same answer, of course.
 
-\begin{verbatim}
+\begin{Verbatim}
 fastpost <- prior * like^8
 fastpost / sum(fastpost)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 0.0003355044 0.1473949328 0.8522695627
 \end{verbatim}
-
-Compare this to what we got in Example \ref{exa-misfiling-assistants-multiple}.
 
 \section{Random Variables}
 \label{sec-4-9}
@@ -2533,7 +1848,9 @@ possible outcomes of \(E\), we call the set of all possible values of
 
 Let \(E\) be the experiment of flipping a coin twice. We have seen
 that the sample space is \( S = \{ HH,\ HT,\ TH,\ TT \} \). Now define
-the random variable \(X = \mbox{the number of heads}\). That is, for
+the random variable
+\[ X = \mbox{the number of heads} .\]
+That is, for
 example, \(X(HH)=2\), while \(X(HT)=1\). We may make a table of the
 possibilities:
 
@@ -2555,8 +1872,10 @@ S_{X}= \{ 0,1,2 \} \).
 
 Let \(E\) be the experiment of flipping a coin repeatedly until
 observing a Head. The sample space would be \(S= \{ H,\ TH,\ TTH,\
-TTTH,\ \ldots \} \). Now define the random variable \(Y=\mbox{the
-number of Tails before the first head}\). Then the support of \(Y\)
+TTTH,\ \ldots \} \).
+Now define the random variable
+\[ Y=\mbox{the number of Tails before the first head} .\]
+Then the support of \(Y\)
 would be \( S_{Y}= \{ 0,1,2,\ldots \} \).
 
 
@@ -2578,80 +1897,30 @@ that can be inspected all at once. And while the support of \(Y\)
 cannot be exhaustively written down, its elements can nevertheless be
 listed in a naturally ordered sequence. Random variables with supports
 similar to those of \(X\) and \(Y\) are called \emph{discrete random
-variables}. We study these in Chapter \ref{sec-5}.
-
+variables}.
 In contrast, the support of \(Z\) is a continuous interval, containing
 all rational and irrational positive real numbers. For this
 reason, random variables with supports like \(Z\) are
-called \emph{continuous random variables}, to be studied in Chapter
-\ref{sec-6}.
+called \emph{continuous random variables}.
 
 \subsection{How to do it with \(\mathsf{R}\)}
 \label{sec-4-9-1}
 
-The primary vessel for this task is the \texttt{addrv} function. There are
-two ways to use it, and we will describe both.
+The idea is to evaluate an expression, apply or directly call a function defining the random variable.
+As an example, let us roll a 4-sided die three times, and
+let us define the random variable \(U=X1-X2+X3\), \(V=\max(X1,X2,X3)\) and \(W=X1+X2+X3\).
 
-\subsubsection{Supply a Defining Formula}
-\label{sec-4-9-1-1}
+See \texttt{?with}, \texttt{?apply} and \texttt{?rowSums}.
 
-The first method is based on the \texttt{transform} function. See
-\texttt{?transform}. The idea is to write a formula defining the random
-variable inside the function, and it will be added as a column to the
-data frame. As an example, let us roll a 4-sided die three times, and
-let us define the random variable \(U=X1-X2+X3\).
-
-\begin{verbatim}
-S <- rolldie(3, nsides = 4, makespace = TRUE) 
-S <- addrv(S, U = X1-X2+X3) 
-\end{verbatim}
-
-Now let's take a look at the values of \(U\). In the interest of
-space, we will only reproduce the first few rows of \(S\) (there are
-\(4^{3}=64\) rows in total).
-
-\begin{verbatim}
+\begin{Verbatim}
+S <- rolldie(3, nsides = 4)
+U <- with(S, X1-X2+X3)
+V <- apply(S, 1, max)
+W <- rowSums(S)
+probs <- 1/nrow(S)
+S <- cbind(S, U, V, W, probs)
 head(S)
-\end{verbatim}
-
-\begin{verbatim}
-:   X1 X2 X3 U    probs
-: 1  1  1  1 1 0.015625
-: 2  2  1  1 2 0.015625
-: 3  3  1  1 3 0.015625
-: 4  4  1  1 4 0.015625
-: 5  1  2  1 0 0.015625
-: 6  2  2  1 1 0.015625
-\end{verbatim}
-
-We see from the \(U\) column it is operating just like it should. We
-can now answer questions like
-
-\begin{verbatim}
-Prob(S, U > 6) 
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.015625
-\end{verbatim}
-
-\subsubsection{Supply a Function}
-\label{sec-4-9-1-2}
-
-Sometimes we have a function laying around that we would like to apply
-to some of the outcome variables, but it is unfortunately tedious to
-write out the formula defining what the new variable would be. The
-\texttt{addrv} function has an argument \texttt{FUN} specifically for this case. Its
-value should be a legitimate function from \(\mathsf{R}\), such as
-\texttt{sum}, \texttt{mean}, \texttt{median}, and so forth. Or, you can define your own
-function. Continuing the previous example, let's define
-\(V=\max(X1,X2,X3)\) and \(W=X1+X2+X3\).
-
-\begin{verbatim}
-S <- addrv(S, FUN = max, invars = c("X1","X2","X3"), name = "V") 
-S <- addrv(S, FUN = sum, invars = c("X1","X2","X3"), name = "W") 
-head(S) 
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 :   X1 X2 X3 U V W    probs
@@ -2663,13 +1932,18 @@ head(S)
 : 6  2  2  1 1 2 5 0.015625
 \end{verbatim}
 
-Notice that \texttt{addrv} has an \texttt{invars} argument to specify exactly to
-which columns one would like to apply the function \texttt{FUN}. If no input
-variables are specified, then \texttt{addrv} will apply \texttt{FUN} to all
-non-=probs= columns. Further, \texttt{addrv} has an optional argument \texttt{name}
-to give the new variable; this can be useful when adding several
-random variables to a probability space (as above). If not specified,
-the default name is \texttt{X}.
+Note that we only reproduce the first few rows of \(S\) (there are \(4^{3}=64\) rows in total).
+Now let's take a look at the values of \(U\).
+We see from the \(U\) column it is operating just like it should.
+We can now answer questions like
+
+\begin{Verbatim}
+sum(subset(S, U > 6)$probs)
+\end{Verbatim}
+
+\begin{verbatim}
+: [1] 0.015625
+\end{verbatim}
 
 \subsection{Marginal Distributions}
 \label{sec-4-9-2}
@@ -2677,16 +1951,16 @@ the default name is \texttt{X}.
 As we can see above, often after adding a random variable \(V\) to a
 probability space one will find that \(V\) has values that are
 repeated, so that it becomes difficult to understand what the ultimate
-behavior of \(V\) actually is. We can use the \texttt{marginal} function to
-aggregate the rows of the sample space by values of \(V\), all the
+behavior of \(V\) actually is.
+We can \texttt{aggregate} the sample space by values of \(V\), all the
 while accumulating the probability associated with \(V\)'s distinct
 values. Continuing our example from above, suppose we would like to
 focus entirely on the values and probabilities of
 \(V=\max(X1,X2,X3)\).
 
-\begin{verbatim}
-marginal(S, vars = "V") 
-\end{verbatim}
+\begin{Verbatim}
+aggregate(S["probs"], by=S["V"], FUN=sum)
+\end{Verbatim}
 
 \begin{verbatim}
 :   V    probs
@@ -2698,13 +1972,11 @@ marginal(S, vars = "V")
 
 We could save the probability space of \(V\) in a data frame and study
 it further, if we wish. As a final remark, we can calculate the
-marginal distributions of multiple variables desired using the \texttt{vars}
-argument. For example, suppose we would like to examine the joint
-distribution of \(V\) and \(W\).
+distributions of multiple variables, e.g., \(V\) and \(W\).
 
-\begin{verbatim}
-marginal(S, vars = c("V", "W")) 
-\end{verbatim}
+\begin{Verbatim}
+aggregate(S["probs"], by=S[c("V","W")], FUN=sum)
+\end{Verbatim}
 
 \begin{verbatim}
    V  W    probs
@@ -2725,21 +1997,3 @@ marginal(S, vars = c("V", "W"))
 15 4 11 0.046875
 16 4 12 0.015625
 \end{verbatim}
-
-Note that the default value of \texttt{vars} is the names of all columns
-except \texttt{probs}. This can be useful if there are duplicated rows in the
-probability space.
-
-\newpage{}
-
-\section{Exercises}
-\label{sec-4-10}
-
-\setcounter{thm}{0}
-
-\begin{xca}
-\label{xca-numb-cond-indep} Prove the assertion given in the text: the
-number of conditions that the events \(A_{1}\), \(A_{2}\), \ldots{},
-\(A_{n}\) must satisfy in order to be mutually independent is
-\(2^{n} - n - 1\). (\emph{Hint}: think about Pascal's triangle.)
-\end{xca}
