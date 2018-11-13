@@ -11,23 +11,17 @@ that it is impossible to write all of the numbers down in a list;
 there are simply too many of them.
 
 This chapter begins with continuous random variables and the
-associated PDFs and CDFs The continuous uniform distribution is
+associated PDFs and CDFs.
+The continuous uniform distribution is
 highlighted, along with the Gaussian, or normal, distribution. Some
 mathematical details pave the way for a catalogue of models.
 
-The interested reader who would like to learn more about any of the
-assorted discrete distributions mentioned below should take a look at
-\emph{Continuous Univariate Distributions, Volumes 1} and \emph{2} by Johnson
-\emph{et al} \cite{Johnson1994,Johnson1995}.
-
-\textbf{What do I want them to know?}
+\textbf{Highlights:}
 \begin{itemize}
 \item how to choose a reasonable continuous model under a variety of
-physical circumstances
+circumstances
 \item basic correspondence between continuous versus discrete random
 variables
-\item the general tools of the trade for manipulation of continuous random
-variables, integration, \emph{etc}.
 \item some details on a couple of continuous models, and exposure to a
 bunch of other ones
 \item how to make new continuous random variables from old ones
@@ -83,17 +77,11 @@ provided \(\int_{S}|x|f(x)\mathrm{d} x\) is finite. Also there is the variance
 \end{equation}
 which can be computed with the alternate formula
 \(\sigma^{2}=\mathbb{E} X^{2}-(\mathbb{E} X)^{2}\). In addition, there
-is the standard deviation \(\sigma=\sqrt{\sigma^{2}}\). The moment
-generating function is given by
-\begin{equation}
-M_{X}(t)=\mathbb{E}\:\mathrm{e}^{tX}=\int_{-\infty}^{\infty}\mathrm{e}^{tx}f_{X}(x)\:\mathrm{d} x,
-\end{equation}
-provided the integral exists (is finite) for all \(t\) in a
-neighborhood of \(t=0\).
+is the standard deviation \(\sigma=\sqrt{\sigma^{2}}\).
 
 \label{exa-cont-pdf3x2} Let the continuous random variable \(X\) have PDF
-\[ f_{X}(x)=3x^{2},\quad 0\leq x\leq 1. \] We will see later that
-\(f_{X}\) belongs to the \emph{Beta} family of distributions. It is easy to
+\[ f_{X}(x)=3x^{2},\quad 0\leq x\leq 1. \]
+It is easy to
 see that \(\int_{-\infty}^{\infty}f(x)\mathrm{d} x=1\).
 \begin{align*}
 \int_{-\infty}^{\infty}f_{X}(x)\mathrm{d} x & =\int_{0}^{1}3x^{2}\:\mathrm{d} x\\
@@ -123,59 +111,16 @@ formula \(\sigma^{2}=\mathbb{E} X^{2}-\mu^{2}\):
 \end{align*}
 which gives \(\sigma^{2}=3/5-(3/4)^{2}=3/80\).
 
-
-\label{exa-cont-pdf-3x4} We will try one with unbounded support to brush
-up on improper integration. Let the random variable \(X\) have PDF \[
-f_{X}(x)=\frac{3}{x^{4}},\quad x>1.  \] We can show that
-\(\int_{-\infty}^{\infty}f(x)\mathrm{d} x=1\):
-\begin{align*}
-\int_{-\infty}^{\infty}f_{X}(x)\mathrm{d} x & =\int_{1}^{\infty}\frac{3}{x^{4}}\:\mathrm{d} x,\\
- & =\lim_{t\to\infty}\int_{1}^{t}\frac{3}{x^{4}}\:\mathrm{d} x,\\
- & =\lim_{t\to\infty}\ \left.3\,\frac{1}{-3}x^{-3}\right|_{x=1}^{t},\\
- & =-\left(\lim_{t\to\infty}\frac{1}{t^{3}}-1\right),\\
- & =1.
-\end{align*}
-We calculate \(\mathbb{P}(3.4\leq X<7.1)\):
-\begin{align*}
-\mathbb{P}(3.4\leq X<7.1) & =\int_{3.4}^{7.1}3x^{-4}\mathrm{d} x,\\
- & =\left.3\,\frac{1}{-3}x^{-3}\right|_{x=3.4}^{7.1},\\
- & =-1(7.1^{-3}-3.4^{-3}),\\
- & \approx0.0226487123.
-\end{align*}
-We locate the mean and variance just like before.
-\begin{align*}
-\mu=\int_{-\infty}^{\infty}xf_{X}(x)\mathrm{d} x & =\int_{1}^{\infty}x\cdot\frac{3}{x^{4}}\:\mathrm{d} x,\\
- & =\left.3\,\frac{1}{-2}x^{-2}\right|_{x=1}^{\infty},\\
- & =-\frac{3}{2}\left(\lim_{t\to\infty}\frac{1}{t^{2}}-1\right),\\
- & =\frac{3}{2}.
-\end{align*}
-Again we use the shortcut \(\sigma^{2}=\mathbb{E} X^{2}-\mu^{2}\):
-\begin{align*}
-\mathbb{E} X^{2}=\int_{-\infty}^{\infty}x^{2}f_{X}(x)\mathrm{d} x & =\int_{1}^{\infty}x^{2}\cdot\frac{3}{x^{4}}\:\mathrm{d} x,\\
- & =\left.3\:\frac{1}{-1}x^{-1}\right|_{x=1}^{\infty},\\
- & =-3\left(\lim_{t\to\infty}\frac{1}{t^{2}}-1\right),\\
- & =3,
-\end{align*}
-which closes the example with \(\sigma^{2}=3-(3/2)^{2}=3/4\).
-
-\subsubsection{How to do it with \(\mathsf{R}\)}
+\subsection{How to do it with \(\mathsf{R}\)}
 \label{sec-6-1-2-1}
 
-There exist utilities to calculate probabilities and expectations for
-general continuous random variables, but it is better to find a
-built-in model, if possible. Sometimes it is not possible. We show how
-to do it the long way, and the \texttt{distr} \index{R packages@\textsf{R}
-packages!distr@\texttt{distr}} package \cite{distr} way.
-
-
 Let \(X\) have PDF \(f(x)=3x^{2}\), \(0<x<1\) and find
-\(\mathbb{P}(0.14\leq X\leq0.71)\). (We will ignore that \(X\) is a
-beta random variable for the sake of argument.)
+\(\mathbb{P}(0.14\leq X\leq0.71)\).
 
-\begin{verbatim}
+\begin{Verbatim}
 f <- function(x) 3*x^2
 integrate(f, lower = 0.14, upper = 0.71)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : 0.355167 with absolute error < 3.9e-15
@@ -185,61 +130,6 @@ Compare this to the answer we found in Example \ref{exa-cont-pdf3x2}. We could
 integrate the function \(x \cdot f(x)=\) \texttt{3*x\textasciicircum{}3} from zero to one to
 get the mean, and use the shortcut \(\sigma^{2}=\mathbb{E}
 X^{2}-\left(\mathbb{E} X\right)^{2}\) for the variance.
-
-
-
-
-Let \(X\) have PDF \(f(x)=3/x^{4}\), \(x>1\). We may integrate the
-function \(g(x) = x \cdot f(x)=\) \texttt{3/x\textasciicircum{}3} from zero to infinity to get
-the mean of \(X\).
-
-\begin{verbatim}
-g <- function(x) 3/x^3
-integrate(g, lower = 1, upper = Inf)
-\end{verbatim}
-
-\begin{verbatim}
-: 1.5 with absolute error < 1.7e-14
-\end{verbatim}
-
-Compare this to the answer we got in Example \ref{exa-cont-pdf-3x4}. Use \texttt{-Inf}
-for \(-\infty\).
-
-
-
-
-Let us redo Example \ref{exa-cont-pdf3x2} with the \texttt{distr} package
-\cite{distr}. The method is similar to that encountered in Section
-\ref{sec-5-1-2-1} in Chapter \ref{sec-5}. We define an
-absolutely continuous random variable:
-
-\begin{verbatim}
-f <- function(x) 3*x^2
-X <- AbscontDistribution(d = f, low1 = 0, up1 = 1)
-p(X)(0.71) - p(X)(0.14)
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.355167
-\end{verbatim}
-
-Compare this to the answer we found earlier. Now let us try
-expectation with the \texttt{distrEx} package \cite{distrEx}:
-\begin{verbatim}
-E(X); var(X); 3/80
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.7496337
-: [1] 0.03768305
-: [1] 0.0375
-\end{verbatim}
-
-Compare these answers to the ones we found in Example \ref{exa-cont-pdf3x2}. Why
-are they different? Because the \texttt{distrEx} package resorts to numerical
-methods when it encounters a model it does not recognize. This means
-that the answers we get for calculations may not exactly match the
-theoretical values. Be careful.
 
 \section{The Continuous Uniform Distribution}
 \label{sec-6-2}
@@ -285,8 +175,7 @@ f_{X}(x)=\frac{1}{\sigma\sqrt{2\pi}}\exp \left\{ \frac{-(x-\mu)^{2}}{2\sigma^{2}
 \end{equation}
 We write
 \(X\sim\mathsf{norm}(\mathtt{mean}=\mu,\,\mathtt{sd}=\sigma)\), and
-the associated \(\mathsf{R}\) function is \texttt{dnorm(x, mean = 0, sd =
-1)}.
+the associated \(\mathsf{R}\) function is \texttt{dnorm(x, mean = $\mu$, sd = $\sigma$)}.
 
 The familiar bell-shaped curve, the normal distribution is also known
 as the \emph{Gaussian distribution} because the German mathematician
@@ -314,55 +203,23 @@ Z=\frac{X-\mu}{\sigma}\sim\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=1).
 \end{equation}
 \end{prop}
 
-The MGF of \(Z\sim\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=1)\) is
-relatively easy to derive:
-\begin{eqnarray*}
-M_{Z}(t) & = & \int_{-\infty}^{\infty}\mathrm{e}^{tz}\frac{1}{\sqrt{2\pi}}\mathrm{e}^{-z^{2}/2}\mathrm{d} z,\\
- & = & \int_{-\infty}^{\infty}\frac{1}{\sqrt{2\pi}}\exp \{ -\frac{1}{2}\left(z^{2}+2tz+t^{2}\right)+\frac{t^{2}}{2} \} \mathrm{d} z,\\
- & = & \mathrm{e}^{t^{2}/2}\left(\int_{-\infty}^{\infty}\frac{1}{\sqrt{2\pi}}\mathrm{e}^{-[z-(-t)]^{2}/2}\mathrm{d} z\right),
-\end{eqnarray*}
-and the quantity in the parentheses is the total area under a \(\mathsf{norm}(\mathtt{mean}=-t,\,\mathtt{sd}=1)\) density, which is one. Therefore,
-\begin{equation}
-M_{Z}(t)=\mathrm{e}^{t^{2}/2},\quad -\infty < t < \infty.
-\end{equation}
-
-
-The MGF of
-\(X\sim\mathsf{norm}(\mathtt{mean}=\mu,\,\mathtt{sd}=\sigma)\) is then
-not difficult either because \[ Z=\frac{X-\mu}{\sigma},\mbox{ or
-rewriting, }X=\sigma Z+\mu.  \] Therefore \[
-M_{X}(t)=\mathbb{E}\mathrm{e}^{tX}=\mathbb{E}\mathrm{e}^{t(\sigma
-Z+\mu)}=\mathbb{E}\mathrm{e}^{\sigma
-tZ}\mathrm{e}^{t\mu}=\mathrm{e}^{t\mu}M_{Z}(\sigma t), \] and we know
-that \(M_{Z}(t)=\mathrm{e}^{t^{2}/2}\), thus substituting we get \[
-M_{X}(t)=\mathrm{e}^{t\mu}\mathrm{e}^{(\sigma t)^{2}/2}=\exp\left\{
-\mu t+\sigma^{2}t^{2}/2\right\} , \] for \(-\infty<t<\infty\).
-
-
-\begin{fact}
-The same argument above shows that if \(X\) has MGF \(M_{X}(t)\) then
-the MGF of \(Y=a+bX\) is
-\begin{equation}
-M_{Y}(t)=\mathrm{e}^{ta}M_{X}(bt).
-\end{equation}
-\end{fact}
-
-
-The 68-95-99.7 Rule. We saw in Section \ref{sec-3-3-4} that when an
+\subsubsection{The 68-95-99.7 Rule} 
+When an
 empirical distribution is approximately bell shaped there are specific
 proportions of the observations which fall at varying distances from
-the (sample) mean. We can see where these come from -- and obtain more
-precise proportions -- with the following:
+the (sample) mean.
+We can obtain precise proportions for normal distributions:
 
 
-\begin{verbatim}
+\begin{Verbatim}
 pnorm(1:3) - pnorm(-(1:3))
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 0.6826895 0.9544997 0.9973002
 \end{verbatim}
 
+\emph{Problem}:
 \label{exa-iq-model} Let the random experiment consist of a person taking
 an IQ test, and let \(X\) be the score on the test. The scores on such
 a test are typically standardized to have a mean of 100 and a standard
@@ -393,13 +250,14 @@ the long way. We define the function \(g(x)=F(x)-0.99\), and then look
 for the root of \(g\) with the \texttt{uniroot} function. It uses numerical
 procedures to find the root so we need to give it an interval of \(x\)
 values in which to search for the root. We can get an educated guess
-from the Empirical Rule \ref{fac-Empirical-Rule}; the root should be
+from the 68-95-99.7 Rule;
+the root should be
 somewhere between two and three standard deviations (15 each) above
 the mean (which is 100).
-\begin{verbatim}
+\begin{Verbatim}
 g <- function(x) pnorm(x, mean = 100, sd = 15) - 0.99
 uniroot(g, interval = c(130, 145))
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 $root
@@ -437,47 +295,21 @@ Q_{X}(p)=\min\left\{ x:\ F_{X}(x)\geq p\right\} ,\quad 0 < p <1.
 \end{equation}
 \end{defn}
 
-\subsubsection{How to do it with \(\mathsf{R}\)}
-\label{sec-6-3-1-1}
-
 Quantile functions are defined for all of the base distributions with
-the \texttt{q} prefix to the distribution name, except for the ECDF whose
-quantile function is exactly the \( Q_{x}(p) = \mathsf{quantile}(x,
-\mathtt{probs} = p, \mathtt{type} = 1) \) function.
-
-
+the \texttt{q} prefix to the distribution name.
 Back to Example \ref{exa-iq-quantile-state-problem}, we are looking for \(Q_{X}(0.99)\), where
 \(X\sim\mathsf{norm}(\mathtt{mean}=100,\,\mathtt{sd}=15)\). It could
 not be easier to do with \(\mathsf{R}\).
 
-\begin{verbatim}
+\begin{Verbatim}
 qnorm(0.99, mean = 100, sd = 15)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{verbatim}
 : [1] 134.8952
 \end{verbatim}
 
 Compare this answer to the one obtained earlier with \texttt{uniroot}.
-
-
-
-Find the values \(z_{0.025}\), \(z_{0.01}\), and \(z_{0.005}\) (these
-will play an important role from Chapter \ref{sec-9} onward).
-
-
-\begin{verbatim}
-qnorm(c(0.025, 0.01, 0.005), lower.tail = FALSE)
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 1.959964 2.326348 2.575829
-\end{verbatim}
-
-Note the \texttt{lower.tail} argument. We would get the same answer with
-\begin{verbatim}
-qnorm(c(0.975, 0.99, 0.995))
-\end{verbatim}
 
 \section{Functions of Continuous Random Variables}
 \label{sec-6-4}
@@ -486,105 +318,9 @@ The goal of this section is to determine the distribution of
 \(U=g(X)\) based on the distribution of \(X\). In the discrete case
 all we needed to do was back substitute for \(x=g^{-1}(u)\) in the PMF
 of \(X\) (sometimes accumulating probability mass along the way). In
-the continuous case, however, we need more sophisticated tools. Now
-would be a good time to review Appendix \ref{sec-21-2}.
+the continuous case, however, we need more sophisticated tools.
 
-\subsection{The PDF Method}
-\label{sec-6-4-1}
-
-\begin{prop}
-\label{pro-func-cont-rvs-pdf-formula} Let \(X\) have PDF \(f_{X}\) and let
-\(g\) be a function which is one-to-one with a differentiable inverse
-\(g^{-1}\). Then the PDF of \(U=g(X)\) is given by
-\begin{equation}
-\label{eq-univ-trans-pdf-long}
-f_{U}(u)=f_{X}\left[g^{-1}(u)\right]\ \left|\frac{\mathrm{d}}{\mathrm{d} u}g^{-1}(u)\right|.
-\end{equation}
-\end{prop}
-
-\begin{rem}
-The formula in Equation \eqref{eq-univ-trans-pdf-long} is nice, but does not
-really make any sense. It is better to write in the intuitive form
-\begin{equation}
-\label{eq-univ-trans-pdf-short}
-f_{U}(u)=f_{X}(x)\left|\frac{\mathrm{d} x}{\mathrm{d} u}\right|.
-\end{equation}
-\end{rem}
-
-\label{exa-lnorm-transformation} Let
-\(X\sim\mathsf{norm}(\mathtt{mean}=\mu,\,\mathtt{sd}=\sigma)\), and
-let \(Y=\mathrm{e}^{X}\). What is the PDF of \(Y\)?  \textbf{Solution:}
-Notice first that \(\mathrm{e}^{x}>0\) for any \(x\), so the support
-of \(Y\) is \((0,\infty)\). Since the transformation is monotone, we
-can solve \(y=\mathrm{e}^{x}\) for \(x\) to get \(x=\ln\, y\), giving
-\(\mathrm{d} x/\mathrm{d} y=1/y\). Therefore, for any \(y>0\), \[
-f_{Y}(y)=f_{X}(\ln
-y)\cdot\left|\frac{1}{y}\right|=\frac{1}{\sigma\sqrt{2\pi}}\exp\left\{
-\frac{(\ln y-\mu)^{2}}{2\sigma^{2}}\right\} \cdot\frac{1}{y}, \] where
-we have dropped the absolute value bars since \(y>0\). The random
-variable \(Y\) is said to have a \emph{lognormal distribution}; see Section
-\ref{sec-6-5}.
-
-
-\label{exa-lin-trans-norm} Suppose
-\(X\sim\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=1)\) and let
-\(Y=4-3X\). What is the PDF of \(Y\)?
-
-
-The support of \(X\) is \((-\infty,\infty)\), and as \(x\) goes from
-\(-\infty\) to \(\infty\), the quantity \(y=4-3x\) also traverses
-\((-\infty,\infty)\). Solving for \(x\) in the equation \(y=4-3x\)
-yields \(x=-(y-4)/3\) giving \(\mathrm{d} x/\mathrm{d} y=-1/3\). And
-since \[ f_{X}(x)=\frac{1}{\sqrt{2\pi}}\mathrm{e}^{-x^{2}/2}, \quad
--\infty < x < \infty , \] we have
-\begin{eqnarray*}
-f_{Y}(y) & = & f_{X}\left(\frac{y-4}{3}\right)\cdot\left|-\frac{1}{3}\right|,\quad -\infty < y < \infty,\\
- & = & \frac{1}{3\sqrt{2\pi}}\mathrm{e}^{-(y-4)^{2}/2\cdot3^{2}},\quad -\infty < y < \infty.
-\end{eqnarray*}
-We recognize the PDF of \(Y\) to be that of a
-\(\mathsf{norm}(\mathtt{mean}=4,\,\mathtt{sd}=3)\)
-distribution. Indeed, we may use an identical argument as the above to
-prove the following fact:
-
-\begin{fact}
-\label{fac-lin-trans-norm-is-norm} If
-\(X\sim\mathsf{norm}(\mathtt{mean}=\mu,\,\mathtt{sd}=\sigma)\) and if
-\(Y=a+bX\) for constants \(a\) and \(b\), with \(b\neq0\), then
-\(Y\sim\mathsf{norm}(\mathtt{mean}=a+b\mu,\,\mathtt{sd}=|b|\sigma)\).
-\end{fact}
-
-Note that it is sometimes easier to \emph{postpone} solving for the inverse
-transformation \(x=x(u)\). Instead, leave the transformation in the
-form \(u=u(x)\) and calculate the derivative of the \emph{original}
-transformation
-\begin{equation}
-\mathrm{d} u/\mathrm{d} x=g'(x).
-\end{equation}
-Once this is known, we can get the PDF of \(U\) with
-\begin{equation}
-f_{U}(u)=f_{X}(x)\left|\frac{1}{\mathrm{d} u/\mathrm{d} x}\right|.
-\end{equation}
-In many cases there are cancellations and the work is shorter. Of course, it is not always true that
-\begin{equation}
-\label{eq-univ-jacob-recip}
-\frac{\mathrm{d} x}{\mathrm{d} u}=\frac{1}{\mathrm{d} u/\mathrm{d} x},
-\end{equation}
-but for the well-behaved examples in this book the trick works just fine.
-
-\begin{rem}
-In the case that \(g\) is not monotone we cannot apply Proposition
-\ref{pro-func-cont-rvs-pdf-formula} directly. However, hope is not
-lost. Rather, we break the support of \(X\) into pieces such that
-\(g\) is monotone on each one. We apply Proposition
-\ref{pro-func-cont-rvs-pdf-formula} on each piece, and finish up by
-adding the results together.
-\end{rem}
-
-\subsection{The CDF method}
-\label{sec-6-4-2}
-
-We know from Section \ref{sec-6-1} that \(f_{X}=F_{X}'\)
-in the continuous case. Starting from the equation
+Using the CDF method, starting from the equation
 \(F_{Y}(y)=\mathbb{P}(Y\leq y)\), we may substitute \(g(X)\) for
 \(Y\), then solve for \(X\) to obtain \(\mathbb{P}[X\leq g^{-1}(y)]\),
 which is just another way to write
@@ -592,6 +328,7 @@ which is just another way to write
 to \(y\) will yield the PDF of \(Y\).
 
 
+\emph{Problem}:
 Suppose \(X\sim\mathsf{unif}(\mathtt{min}=0,\,\mathtt{max}=1)\) and
 suppose that we let \(Y=-\ln\, X\). What is the PDF of \(Y\)?
 
@@ -619,38 +356,13 @@ y}\left(1-\mathrm{e}^{-y}\right)=0-\mathrm{e}^{-y}(-1), \] or
 member of the exponential family of distributions, see Section
 \ref{sec-6-5}.
 
-
-
-\textbf{The Probability Integral Transform}. Given a continuous random
-variable \(X\) with strictly increasing CDF \(F_{X}\), let the random
-variable \(Y\) be defined by \(Y=F_{X}(X)\). Then the distribution of
-\(Y\) is \(\mathsf{unif}(\mathtt{min}=0,\,\mathtt{max}=1)\).
-
-
-\begin{proof}
-We employ the CDF method. First note that the support of \(Y\) is
-\((0,1)\). Then for any \(0<y<1\), \[ F_{Y}(y)=\mathbb{P}(Y\leq
-y)=\mathbb{P}(F_{X}(X)\leq y).  \] Now since \(F_{X}\) is strictly
-increasing, it has a well defined inverse function
-\(F_{X}^{-1}\). Therefore, \[ \mathbb{P}(F_{X}(X)\leq
-y)=\mathbb{P}(X\leq F_{X}^{-1}(y))=F_{X}[F_{X}^{-1}(y)]=y.  \]
-Summarizing, we have seen that \(F_{Y}(y)=y\), \(0<y<1\). But this is
-exactly the CDF of a
-\(\mathsf{unif}(\mathtt{min}=0,\,\mathtt{max}=1)\) random variable.
-\end{proof}
-
-\begin{fact}
-The Probability Integral Transform is true for all continuous random
-variables with continuous CDFs, not just for those with strictly
-increasing CDFs (but the proof is more complicated). The transform is
-\textbf{not} true for discrete random variables, or for continuous random
-variables having a discrete component (that is, with jumps in their
-CDF).
-\end{fact}
-
+\emph{Problem}:
 \label{exa-distn-of-z-squared} Let
 \(Z\sim\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=1)\) and let
-\(U=Z^{2}\). What is the PDF of \(U\)?  Notice first that
+\(U=Z^{2}\).
+What is the PDF of \(U\)?
+
+Notice first that
 \(Z^{2}\geq0\), and thus the support of \(U\) is \([0,\infty)\). And
 for any \(u\geq0\), \[ F_{U}(u)=\mathbb{P}(U\leq
 u)=\mathbb{P}(Z^{2}\leq u).  \] But \(Z^{2}\leq u\) occurs if and only
@@ -668,101 +380,14 @@ u)^{-1/2}\mathrm{e}^{-u/2},\quad u > 0.  \] This is what we will later
 call a \emph{chi-square distribution with 1 degree of freedom}. See Section
 \ref{sec-6-5}.
 
-\subsubsection{How to do it with \(\mathsf{R}\)}
-\label{sec-6-4-2-1}
+\begin{fact}
+\label{fac-lin-trans-norm-is-norm}
+If \(X\sim\mathsf{norm}(\mathtt{mean}=\mu,\,\mathtt{sd}=\sigma)\) and if \(Y=a+bX\) for constants \(a\) and \(b\), with \(b\neq0\), then \(Y\sim\mathsf{norm}(\mathtt{mean}=a+b\mu,\,\mathtt{sd}=|b|\sigma)\).
+\end{fact}
 
-The \texttt{distr} package \cite{distr} has functionality to investigate
-transformations of univariate distributions. There are exact results
-for ordinary transformations of the standard distributions, and
-\texttt{distr} takes advantage of these in many cases. For instance, the
-\texttt{distr} package can handle the transformation in Example \ref{exa-lin-trans-norm} quite nicely:
-
-\begin{verbatim}
-X <- Norm(mean = 0, sd = 1)
-Y <- 4 - 3*X
-Y
-\end{verbatim}
-
-\begin{verbatim}
-: Distribution Object of Class: Norm
-:  mean: 4
-:  sd: 3
-\end{verbatim}
-
-So \texttt{distr} "knows" that a linear transformation of a normal random
-variable is again normal, and it even knows what the correct \texttt{mean}
-and \texttt{sd} should be. But it is impossible for \texttt{distr} to know
-everything, and it is not long before we venture outside of the
-transformations that \texttt{distr} recognizes. Let us try Example
-\ref{exa-lnorm-transformation}:
-
-\begin{verbatim}
-Y <- exp(X)
-Y
-\end{verbatim}
-
-\begin{verbatim}
-: Distribution Object of Class: AbscontDistribution
-\end{verbatim}
-
-The result is an object of class \texttt{AbscontDistribution}, which is one
-of the classes that \texttt{distr} uses to denote general distributions that
-it does not recognize (it turns out that \(Z\) has a \emph{lognormal}
-distribution; see Section \ref{sec-6-5}). A
-simplified description of the process that \texttt{distr} undergoes when it
-encounters a transformation \(Y=g(X)\) that it does not recognize is
-\begin{enumerate}
-\item Randomly generate many, many copies \(X_{1}\), \(X_{2}\), \ldots{},
-\(X_{n}\) from the distribution of \(X\),
-\item Compute \(Y_{1}=g(X_{1})\), \(Y_{2}=g(X_{2})\), \ldots{},
-\(Y_{n}=g(X_{n})\) and store them for use.
-\item Calculate the PDF, CDF, quantiles, and random variates using the
-simulated values of \(Y\).
-\end{enumerate}
-As long as the transformation is sufficiently nice, such as a linear
-transformation, the exponential, absolute value, \emph{etc.}, the \texttt{d-p-q}
-functions are calculated analytically based on the \texttt{d-p-q} functions
-associated with \(X\). But if we try a crazy transformation then we
-are greeted by a warning:
-
-\begin{verbatim}
-W <- sin(exp(X) + 27)
-W
-\end{verbatim}
-
-\begin{verbatim}
-: Distribution Object of Class: AbscontDistribution
-\end{verbatim}
-
-The warning confirms that the \texttt{d-p-q} functions are not calculated
-analytically, but are instead based on the randomly simulated values
-of \(Y\). \emph{We must be careful to remember this.} The nature of random
-simulation means that we can get different answers to the same
-question: watch what happens when we compute \(\mathbb{P}(W\leq0.5)\)
-using the \(W\) above, then define \(W\) again, and compute the
-(supposedly) same \(\mathbb{P}(W\leq0.5)\) a few moments later.
-
-\begin{verbatim}
-p(W)(0.5)
-W <- sin(exp(X) + 27)
-p(W)(0.5)
-\end{verbatim}
-
-\begin{verbatim}
-: [1] 0.5793242
-: [1] 0.5793242
-\end{verbatim}
-
-The answers are not the same! Furthermore, if we were to repeat the
-process we would get yet another answer for \(\mathbb{P}(W\leq0.5)\).
-
-The answers were close, though. And the underlying randomly generated
-\(X\)'s were not the same so it should hardly be a surprise that the
-calculated \(W\)'s were not the same, either. This serves as a warning
-(in concert with the one that \texttt{distr} provides) that we should be
-careful to remember that complicated transformations computed by
-\(\mathsf{R}\) are only approximate and may fluctuate slightly due to
-the nature of the way the estimates are calculated.
+\begin{proof}
+Please exercise.
+\end{proof}
 
 \section{Other Continuous Distributions}
 \label{sec-6-5}
@@ -799,8 +424,7 @@ The mean is \(\mu=1/\lambda\) and the variance is
 The exponential distribution is closely related to the Poisson
 distribution. If customers arrive at a store according to a Poisson
 process with rate \(\lambda\) and if \(Y\) counts the number of
-customers that arrive in the time interval \([0,t)\), then we saw in
-Section \ref{sec-5-6} that \( Y \sim
+customers that arrive in the time interval \([0,t)\), then we know that \( Y \sim
 \mathsf{pois}(\mathtt{lambda}=\lambda t). \) Now consider a different
 question: let us start our clock at time 0 and stop the clock when the
 first customer arrives. Let \(X\) be the length of this random time
@@ -877,18 +501,13 @@ freedom}. We write \(X\sim\mathsf{chisq}(\mathtt{df}=p)\). The
 associated \(\mathsf{R}\) functions are \texttt{dchisq(x, df)}, \texttt{pchisq},
 \texttt{qchisq}, and \texttt{rchisq}, which give the PDF, CDF, quantile function,
 and simulate random variates, respectively. See Figure
-\ref{fig-chisq-dist-vary-df}. In an obvious notation we may define
-\(\chi_{\alpha}^{2}(p)\) as the number on the \(x\)-axis such that
-there is exactly \(\alpha\) area under the
-\(\mathsf{chisq}(\mathtt{df}=p)\) curve to its right.
+\ref{fig-chisq-dist-vary-df}, which is produced by:
 
-The code to produce Figure \ref{fig-chisq-dist-vary-df} is
-
-\begin{verbatim}
+\begin{Verbatim}
 curve(dchisq(x, df = 3), from = 0, to = 20, ylab = "y")
 ind <- c(4, 5, 10, 15)
 for (i in ind) curve(dchisq(x, df = i), 0, 20, add = TRUE)
-\end{verbatim}
+\end{Verbatim}
 
 \begin{figure}[ht!]
 \centering
@@ -903,23 +522,19 @@ Here are some useful things to know about the chi-square distribution.
 \(Z^{2}\sim\mathsf{chisq}(\mathtt{df}=1)\). We saw this in Example
 \ref{exa-distn-of-z-squared}, and the fact is important when it
 comes time to find the distribution of the sample variance,
-\(S^{2}\). See Theorem \ref{thm-Xbar-andS} in Section
-\ref{sec-8-2-2}.
+\(S^{2}\).
 \item The chi-square distribution is supported on the positive
 \(x\)-axis, with a right-skewed distribution.
 \item The \(\mathsf{chisq}(\mathtt{df}=p)\) distribution is the same as a
 \(\mathsf{gamma}(\mathtt{shape}=p/2,\,\mathtt{rate}=1/2)\)
 distribution.
-\item The MGF of \(X\sim\mathsf{chisq}(\mathtt{df}=p)\) is
-\begin{equation}
-\label{eq-mgf-chisq}
-M_{X}(t)=\left(1-2t\right)^{-p},\quad t < 1/2.
-\end{equation}
 \end{enumerate}
 \end{rem}
 
 \subsubsection{Student's \(t\) distribution}
 \label{sec-6-5-2-2}
+
+This distribution was first published by W. S. Gosset (1900) under the pseudonym Student, and the distribution has consequently come to be known as Student's \(t\) distribution.
 
 A random variable \(X\) with PDF
 \begin{equation}
@@ -927,9 +542,45 @@ f_{X}(x) = \frac{\Gamma\left[ (r+1)/2\right] }{\sqrt{r\pi}\,\Gamma(r/2)}\left( 1
 \end{equation}
 is said to have \emph{Student's} \(t\) distribution with \(r\) \emph{degrees of
 freedom}, and we write \(X\sim\mathsf{t}(\mathtt{df}=r)\). The
-associated \(\mathsf{R}\) functions are \texttt{dt},=pt=, \texttt{qt}, and \texttt{rt},
+associated \(\mathsf{R}\) functions are \texttt{dt(x, df)}, \texttt{pt}, \texttt{qt}, and \texttt{rt},
 which give the PDF, CDF, quantile function, and simulate random
-variates, respectively. See Section \ref{sec-8-2}.
+variates, respectively.
+
+The shape of the Student's \(t\) distribution is similar to the normal, but the tails are considerably heavier.
+See Figure \ref{fig-Students-t-dist-vary-df}.
+The code to produce Figure \ref{fig-Students-t-dist-vary-df} is
+
+\begin{Verbatim}
+curve(dt(x, df = 30), from = -3, to = 3, lwd = 3, ylab = "y")
+ind <- c(1, 2, 3, 5, 10)
+for (i in ind) curve(dt(x, df = i), -3, 3, add = TRUE)
+\end{Verbatim}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.9\textwidth]{fig/sampdist-Students-t-dist-vary-df.ps}
+\caption[Student's \(t\) distribution for various degrees of freedom]
+{
+\label{fig-Students-t-dist-vary-df}
+\small
+A plot of Student's \(t\) distribution for various degrees of freedom.
+}
+\end{figure}
+
+\begin{rem}
+There are a few things to note about the \(\mathtt{t}(\mathtt{df}=r)\) distribution.
+\begin{enumerate}
+\item
+The \(\mathtt{t}(\mathtt{df}=r)\) distribution can be defined as the distribution of the random variable:
+\[ T=\frac{Z}{\sqrt{V/r}}, \]
+where $Z\sim\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=1)$ and $V\sim\mathsf{chisq}(\mathtt{df}=r)$ are independent.
+\item
+The standard deviation of \(\mathsf{t}(\mathtt{df}=r)\) is undefined (that is, infinite) unless \(r>2\).
+When \(r\) is more than 2, the standard deviation is always bigger than one, but decreases to 1 as \(r\to\infty\).
+\item
+As \(r\to\infty\), the \(\mathtt{t}(\mathtt{df}=r)\) distribution approaches the \(\mathsf{norm}(\mathtt{mean}=0,\,\mathtt{sd}=1)\) distribution.
+\end{enumerate}
+\end{rem}
 
 \subsubsection{Snedecor's \(F\) distribution}
 \label{sec-6-5-2-3}
@@ -943,13 +594,15 @@ freedom. We write
 \(X\sim\mathsf{f}(\mathtt{df1}=m,\,\mathtt{df2}=n)\). The associated
 \(\mathsf{R}\) functions are \texttt{df(x, df1, df2)}, \texttt{pf}, \texttt{qf}, and \texttt{rf},
 which give the PDF, CDF, quantile function, and simulate random
-variates, respectively. We define \(F_{\alpha}(m,n)\) as the number on
-the \(x\)-axis such that there is exactly \(\alpha\) area under the
-\(\mathsf{f}(\mathtt{df1}=m,\,\mathtt{df2}=n)\) curve to its right.
+variates, respectively.
 
 \begin{rem}
 Here are some notes about the \(F\) distribution.
 \begin{enumerate}
+\item
+A random variable of the $F$ distribution with parameters $\mathtt{df1}=m$ and $\mathtt{df2}=n$ arises as the ratio of two appropriately scaled chi-squared variates:
+\[ X=\frac{U/m}{V/n} \]
+where $U$ and $V$ have independent chi-square distributions with $m$ and $n$ degrees of freedom, respectively.
 \item If \(X\sim\mathsf{f}(\mathtt{df1}=m,\,\mathtt{df2}=n)\) and
 \(Y=1/X\), then
 \(Y\sim\mathsf{f}(\mathtt{df1}=n,\,\mathtt{df2}=m)\). Historically,
@@ -960,133 +613,9 @@ publishers could cut the size of their printed tables in half. It
 plays less of a role today now that personal computers are
 widespread.
 \item If \(X\sim\mathsf{t}(\mathtt{df}=r)\), then
-\(X^{2}\sim\mathsf{f}(\mathtt{df1}=1,\,\mathtt{df2}=r)\). We will
-see this again in Section \ref{sec-11-3-3}.
+\(X^{2}\sim\mathsf{f}(\mathtt{df1}=1,\,\mathtt{df2}=r)\).
 \end{enumerate}
 \end{rem}
-
-\subsection{Other Popular Distributions}
-\label{sec-6-5-3}
-
-\subsubsection{The Cauchy Distribution}
-\label{sec-6-5-3-1}
-
-This is a special case of the Student's \(t\) distribution. It has PDF
-\begin{equation}
-f_{X}(x) = \frac{1}{\beta\pi} \left[ 1+\left( \frac{x-m}{\beta} \right)^{2} \right]^{-1},\quad -\infty < x < \infty.
-\end{equation}
-We write \(X \sim \mathsf{cauchy}(\mathtt{location} =
-m,\,\mathtt{scale} = \beta)\). The associated \(\mathsf{R}\) function
-is \texttt{dcauchy(x, location = 0, scale = 1)}.
-
-It is easy to see that a \(\mathsf{cauchy}(\mathtt{location} =
-0,\,\mathtt{scale} = 1)\) distribution is the same as a
-\(\mathsf{t}(\mathtt{df}=1)\) distribution. The \(\mathsf{cauchy}\)
-distribution looks like a \(\mathsf{norm}\) distribution but with very
-heavy tails. The mean (and variance) do not exist, that is, they are
-infinite. The median is represented by the \(\mathtt{location}\)
-parameter, and the \(\mathtt{scale}\) parameter influences the spread
-of the distribution about its median.
-
-\subsubsection{The Beta Distribution}
-\label{sec-6-5-3-2}
-
-This is a generalization of the continuous uniform distribution.
-\begin{equation}
-f_{X}(x)=\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}\, x^{\alpha-1}(1-x)^{\beta-1},\quad 0 < x < 1.
-\end{equation}
-We write
-\(X\sim\mathsf{beta}(\mathtt{shape1}=\alpha,\,\mathtt{shape2}=\beta)\). The
-associated \(\mathsf{R}\) function is \texttt{dbeta(x, shape1, shape2)}. The
-mean and variance are
-\begin{equation} 
-\mu=\frac{\alpha}{\alpha+\beta}\mbox{ and }\sigma^{2}=\frac{\alpha\beta}{\left(\alpha+\beta\right)^{2}\left(\alpha+\beta+1\right)}.
-\end{equation}
-See Example \ref{exa-cont-pdf3x2}. This distribution comes up a lot in Bayesian
-statistics because it is a good model for one's prior beliefs about a
-population proportion \(p\), \(0\leq p\leq1\).
-
-\subsubsection{The Logistic Distribution}
-\label{sec-6-5-3-3}
-
-\begin{equation}
-f_{X}(x)=\frac{1}{\sigma}\exp\left(-\frac{x-\mu}{\sigma}\right)\left[1+\exp\left(-\frac{x-\mu}{\sigma}\right)\right]^{-2},\quad -\infty < x < \infty.
-\end{equation}
-We write
-\(X\sim\mathsf{logis}(\mathtt{location}=\mu,\,\mathtt{scale}=\sigma)\). The
-associated \(\mathsf{R}\) function is \texttt{dlogis(x, location = 0, scale =
-1)}. The logistic distribution comes up in differential equations as a
-model for population growth under certain assumptions. The mean is
-\(\mu\) and the variance is \(\pi^{2}\sigma^{2}/3\).
-
-\subsubsection{The Lognormal Distribution}
-\label{sec-6-5-3-4}
-
-This is a distribution derived from the normal distribution (hence the
-name). If
-\(U\sim\mathtt{norm}(\mathtt{mean}=\mu,\,\mathtt{sd}=\sigma)\), then
-\( X = \mathrm{e}^{U} \) has PDF
-\begin{equation}
-f_{X}(x)=\frac{1}{\sigma x\sqrt{2\pi}}\exp\left[\frac{-(\ln x-\mu)^{2}}{2\sigma^{2}}\right], \quad 0 < x < \infty.
-\end{equation}
-We write
-\(X\sim\mathsf{lnorm}(\mathtt{meanlog}=\mu,\,\mathtt{sdlog}=\sigma)\). The
-associated \(\mathsf{R}\) function is \texttt{dlnorm(x, meanlog = 0, sdlog =
-1)}. Notice that the support is concentrated on the positive \(x\)
-axis; the distribution is right-skewed with a heavy tail. See Example
-\ref{exa-lnorm-transformation}.
-
-\subsubsection{The Weibull Distribution}
-\label{sec-6-5-3-5}
-
-This has PDF
-\begin{equation}
-f_{X}(x)=\frac{\alpha}{\beta}\left(\frac{x}{\beta}\right)^{\alpha-1}\exp\left(\frac{x}{\beta}\right)^{\alpha},\quad x>0.
-\end{equation}
-We write
-\(X\sim\mathsf{weibull}(\mathtt{shape}=\alpha,\,\mathtt{scale}=\beta)\). The
-associated \(\mathsf{R}\) function is \texttt{dweibull(x, shape, scale = 1)}.
-
-\subsubsection{How to do it with \(\mathsf{R}\)}
-\label{sec-6-5-3-6}
-
-There is some support of moments and moment generating functions for
-some continuous probability distributions included in the \texttt{actuar}
-package \cite{actuar}. The convention is \texttt{m} in front of the
-distribution name for raw moments, and \texttt{mgf} in front of the
-distribution name for the moment generating function. At the time of
-this writing, the following distributions are supported: gamma,
-inverse Gaussian, (non-central) chi-squared, exponential, and uniform.
-
-
-Calculate the first four raw moments for
-\(X\sim\mathsf{gamma}(\mathtt{shape}=13,\,\mathtt{rate}=1)\) and plot
-the moment generating function.
-
-We load the \texttt{actuar} package and use the functions \texttt{mgamma} and
-\texttt{mgfgamma}:
-\begin{verbatim}
-mgamma(1:4, shape = 13, rate = 1)
-\end{verbatim}
-
-\begin{verbatim}
-: [1]    13   182  2730 43680
-\end{verbatim}
-
-For the plot we can use the function in the following form:
-
-\begin{verbatim}
-plot(function(x){mgfgamma(x, shape = 13, rate = 1)}, 
-     from=-0.1, to=0.1, ylab = "gamma mgf")
-\end{verbatim}
-
-\begin{figure}[ht!]
-\centering
-\includegraphics[width=0.9\textwidth]{fig/contdist-gamma-mgf.ps}
-\caption[Plot of the \textsf{gamma}(\texttt{shape} = 13, \texttt{rate} = 1) MGF]{\label{fig-gamma-mgf}\small A plot of the \textsf{gamma}(\texttt{shape} = 13, \texttt{rate} = 1) MGF.}
-\end{figure}
-
-
 
 \newpage{}
 
@@ -1095,14 +624,7 @@ plot(function(x){mgfgamma(x, shape = 13, rate = 1)},
 \setcounter{thm}{0}
 
 \begin{xca}
-Find the constant \(C\) so that the given function is a valid PDF of a random variable \(X\).
-\begin{enumerate}
-\item \( f(x) = Cx^{n},\quad 0 < x <1 \).
-\item \( f(x) = Cx\mathrm{e}^{-x},\quad 0 < x < \infty\).
-\item \( f(x) = \mathrm{e}^{-(x - C)}, \quad 7 < x < \infty.\)
-\item \( f(x) = Cx^{3}(1 - x)^{2},\quad 0 < x < 1.\)
-\item \( f(x) = C(1 + x^{2}/4)^{-1}, \quad -\infty < x < \infty.\)
-\end{enumerate}
+Find \(C\) so that function $f(x) = Cx^{n}$ is a valid PDF of a random variable $X\in(0, 1)$.
 \end{xca}
 
 \begin{xca}
